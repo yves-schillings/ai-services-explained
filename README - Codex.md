@@ -36,7 +36,7 @@ authentication service, CPE controller or production deployment bundle.
 10 embeddings, 11 translation and 12 elementary redaction.
 
 The article has one business function, application flow and infrastructure diagram
-for each main family. Article publication and GitHub publication remain pending
+for each main family. The code is published with authorisation. Article publication remains pending
 approval of the exact article document. No client names or client data are included.
 
 ## Verification
