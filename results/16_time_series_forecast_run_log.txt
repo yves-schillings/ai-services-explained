@@ -1,0 +1,4 @@
+Validation MAE (documents per day): {'same_day_last_week': 46.6, 'gradient_boosting': 42.5}
+Final test MAE, most recent weeks: {'same_day_last_week': 37.2, 'gradient_boosting': 30.4}
+Test MAE with a leaky centred mean (impossible in production): 26.3
+Action: the forecast supports planning. A manager adjusts it for known events.

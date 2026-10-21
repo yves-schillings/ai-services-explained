@@ -1,0 +1,15 @@
+{
+  "days": 730,
+  "train_days": 491,
+  "val_days": 105,
+  "test_days": 106,
+  "validation_mae": {
+    "same_day_last_week": 46.6,
+    "gradient_boosting": 42.5
+  },
+  "test_mae_once": {
+    "same_day_last_week": 37.2,
+    "gradient_boosting": 30.4
+  },
+  "leaky_feature_test_mae": 26.3
+}

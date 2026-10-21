@@ -1,0 +1,20 @@
+1. Need: propose a document type. Acceptance: macro-F1 >= 0.85 on the final test set, and low-confidence documents go to a person.
+2. Data: 1324 fictional documents in 200 cases. Example: {"doc_id": "case-000-d0", "case_id": "case-000", "text": "tunnel statement report chapel with tunnel street chapel page evening around person patrol saw witness chapel the remembers tunnel damage", "label": "witness_statement"}
+   Class mix: {'witness_statement': 456, 'correspondence': 145, 'incident_report': 428, 'evidence_inventory': 295}
+--- 200 labelled cases (1324 documents)
+3. Split by case: {'train': 933, 'val': 181, 'test': 210} - cases shared between train and test: 0
+4-5. Hyperparameters chosen on validation: {'C': 10.0, 'class_weight': 'balanced', 'train_macro_f1': 1.0, 'val_macro_f1': 0.8682566667359854}
+   Learned parameters: {'vocabulary_terms': 4175, 'logistic_coefficients': 16704}
+6. Final test, used once: {'accuracy': 0.8857, 'macro_f1': 0.848, 'per_class_f1': {'correspondence': 0.7097, 'evidence_inventory': 0.8511, 'incident_report': 0.9091, 'witness_statement': 0.922}, 'labels': ['witness_statement', 'incident_report', 'evidence_inventory', 'correspondence'], 'share_sent_to_review': 0.1143, 'accuracy_on_kept': 0.9462, 'passes_acceptance': False}
+7. Leakage check, test macro-F1: {'split_by_case': 0.848, 'random_split': 0.9302, 'vectoriser_fitted_on_all_data': 0.8637}
+   Release decision: refused: below the acceptance criterion, more labelled cases needed
+--- 400 labelled cases (2588 documents)
+3. Split by case: {'train': 1785, 'val': 396, 'test': 407} - cases shared between train and test: 0
+4-5. Hyperparameters chosen on validation: {'C': 1.0, 'class_weight': 'balanced', 'train_macro_f1': 0.9967712720033297, 'val_macro_f1': 0.9370854006387018}
+   Learned parameters: {'vocabulary_terms': 5858, 'logistic_coefficients': 23436}
+6. Final test, used once: {'accuracy': 0.9214, 'macro_f1': 0.895, 'per_class_f1': {'correspondence': 0.7792, 'evidence_inventory': 0.918, 'incident_report': 0.9302, 'witness_statement': 0.9527}, 'labels': ['witness_statement', 'incident_report', 'evidence_inventory', 'correspondence'], 'share_sent_to_review': 0.2236, 'accuracy_on_kept': 0.9747, 'passes_acceptance': True}
+7. Leakage check, test macro-F1: {'split_by_case': 0.895, 'random_split': 0.9422, 'vectoriser_fitted_on_all_data': 0.895}
+   Release decision: candidate for release
+8. Artifact: document_triage.joblib afd04ed833983df7 ... manifest written.
+9. Inference from the saved artifact: [{'label': 'witness_statement', 'confidence': 0.8672, 'requires_review': False}]
+10. Monitoring after deployment: {'mean_confidence_test': 0.6233, 'mean_confidence_new_batch': 0.5193, 'review_share_test': 0.2236, 'review_share_new_batch': 0.56, 'investigate': True}

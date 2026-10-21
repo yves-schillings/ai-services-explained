@@ -1,4 +1,6 @@
-"""Deterministic control tests. No model server or external service is contacted."""
+"""Deterministic control tests of the service examples 03 to 12.
+No model server or external service is contacted. The training examples 01, 02 and 13 to 18
+are tested in test_training.py."""
 from pathlib import Path
 import importlib.util
 import tempfile
@@ -13,15 +15,6 @@ def load(prefix):
     return module
 
 class Examples(unittest.TestCase):
-    def test_fitted_classification(self):
-        m=load('01');model=m.train(m.TRAIN)
-        self.assertEqual(m.predict(model,'invoice refund'),'billing')
-        self.assertEqual(m.predict(model,'router connection'),'technical')
-    def test_empty_training_is_rejected(self):
-        m=load('01')
-        with self.assertRaises(ValueError):m.predict(m.train([]),'invoice')
-    def test_neural_network_learns_toy_nonlinearity(self):
-        m=load('02');self.assertEqual((m.fit()>.5).astype(int).tolist(),[0,1,1,0])
     def test_schema_accepts_valid_draft(self):
         m=load('04');v={'summary':'Server restarted','next_action':'Check cause'}
         self.assertEqual(m.validate(v),v)

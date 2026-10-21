@@ -1,0 +1,6 @@
+Example job: {'pages': 201, 'scanned_share': 0.411, 'audio_minutes': 29.8, 'language': 'en', 'priority': 'normal', 'minutes': 37.01}
+Validation MAE by tree depth: [{'max_depth': 1, 'train_mae': 6.06, 'val_mae': 6.66}, {'max_depth': 2, 'train_mae': 4.57, 'val_mae': 5.44}, {'max_depth': 3, 'train_mae': 3.89, 'val_mae': 5.41}, {'max_depth': 4, 'train_mae': 3.43, 'val_mae': 5.44}, {'max_depth': 6, 'train_mae': 2.18, 'val_mae': 5.49}, {'max_depth': 8, 'train_mae': 1.01, 'val_mae': 5.56}, {'max_depth': 10, 'train_mae': 0.24, 'val_mae': 6.09}] -> chosen depth 3
+Validation scores: {'constant_baseline': {'mae_minutes': 24.22, 'rmse_minutes': 31.82, 'r2': -0.003}, 'linear': {'mae_minutes': 6.21, 'rmse_minutes': 9.02, 'r2': 0.919}, 'gradient_boosting': {'mae_minutes': 5.41, 'rmse_minutes': 8.57, 'r2': 0.927}}
+Final test (once): {'gradient_boosting': {'mae_minutes': 5.39, 'rmse_minutes': 8.54, 'r2': 0.935}}
+Feature importance: {'audio_minutes': 0.783, 'pages': 0.151, 'scanned_share': 0.059, 'language_nl': 0.002, 'language_en': 0.002, 'priority_normal': 0.001, 'priority_urgent': 0.001, 'language_fr': 0.0}
+Limit: the estimate supports planning. It never decides a priority for a person or a case.

@@ -1,0 +1,4 @@
+MLP: 139,651 weights, stopped after 30 epochs, best epoch 30. Clean test 0.982, hard test 0.887
+CNN: 89,091 weights, stopped after 25 epochs, best epoch 20. Clean test 0.990, hard test 0.935
+Few labels, clean test accuracy: {'from_scratch': 0.9367, 'feature_extraction': 0.8483, 'full_fine_tuning': 0.95}
+Done in 23.4 s. Artifact page_layout_cnn.pt and manifest written.

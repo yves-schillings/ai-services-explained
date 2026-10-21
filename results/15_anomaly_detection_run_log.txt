@@ -1,0 +1,4 @@
+Fitted on 2525 records without labels. Scored 2525 new records.
+Review list quality on the injected records: {'precision_at_25': 0.84, 'recall_at_25': 1.0, 'precision_at_50': 0.42, 'recall_at_50': 1.0, 'precision_at_100': 0.21, 'recall_at_100': 1.0}
+Top three for review: [{'hour': 3.5, 'documents_opened': 126.0, 'export_mb': 327.7, 'failed_logins': 5.0}, {'hour': 0.4, 'documents_opened': 114.0, 'export_mb': 227.9, 'failed_logins': 4.0}, {'hour': 0.8, 'documents_opened': 108.0, 'export_mb': 265.7, 'failed_logins': 3.0}]
+Action: an operator reviews the list. An anomaly is not evidence and triggers no automatic step.
