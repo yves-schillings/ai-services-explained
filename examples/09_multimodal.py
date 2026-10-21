@@ -1,6 +1,6 @@
 """Ask a separately provisioned local vision-language model about an image.
 
-Run: python "09_multimodal - Codex.py" sample.png --model YOUR_LOCAL_VISION_MODEL
+Run: python "09_multimodal.py" sample.png --model YOUR_LOCAL_VISION_MODEL
 The selected model must actually support images. No OCR accuracy claim.
 """
 

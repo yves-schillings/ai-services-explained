@@ -1,6 +1,6 @@
 """Transcribe a local recording using separately provisioned Whisper weights.
 
-Run: python "08_speech - Codex.py" recording.wav --model-dir PATH --language en
+Run: python "08_speech.py" recording.wav --model-dir PATH --language en
 Requires faster-whisper. Model loading is local only. No automatic download.
 """
 from pathlib import Path

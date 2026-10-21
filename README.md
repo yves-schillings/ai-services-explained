@@ -19,9 +19,9 @@ Check upstream package licences and model licences before deployment.
 Run a filename in quotes, for example:
 
 ```powershell
-python "examples/01_machine_learning - Codex.py"
-python "examples/02_deep_learning - Codex.py"
-python "tests - Codex.py"
+python "examples/01_machine_learning.py"
+python "examples/02_deep_learning.py"
+python "tests.py"
 ```
 
 Every example starts with its command, prerequisites and scope. Read the comments
@@ -48,16 +48,16 @@ Real language, embedding, vision, OCR and speech quality was not evaluated.
 
 ## Examples
 
-- [01_machine_learning - Codex.py](examples/01_machine_learning%20-%20Codex.py)
-- [02_deep_learning - Codex.py](examples/02_deep_learning%20-%20Codex.py)
-- [03_language_model - Codex.py](examples/03_language_model%20-%20Codex.py)
-- [04_generative_ai - Codex.py](examples/04_generative_ai%20-%20Codex.py)
-- [05_rag - Codex.py](examples/05_rag%20-%20Codex.py)
-- [06_agent - Codex.py](examples/06_agent%20-%20Codex.py)
-- [07_vision_ocr - Codex.py](examples/07_vision_ocr%20-%20Codex.py)
-- [08_speech - Codex.py](examples/08_speech%20-%20Codex.py)
-- [09_multimodal - Codex.py](examples/09_multimodal%20-%20Codex.py)
-- [10_embeddings - Codex.py](examples/10_embeddings%20-%20Codex.py)
-- [11_translation - Codex.py](examples/11_translation%20-%20Codex.py)
-- [12_redaction - Codex.py](examples/12_redaction%20-%20Codex.py)
+- [01_machine_learning.py](examples/01_machine_learning.py)
+- [02_deep_learning.py](examples/02_deep_learning.py)
+- [03_language_model.py](examples/03_language_model.py)
+- [04_generative_ai.py](examples/04_generative_ai.py)
+- [05_rag.py](examples/05_rag.py)
+- [06_agent.py](examples/06_agent.py)
+- [07_vision_ocr.py](examples/07_vision_ocr.py)
+- [08_speech.py](examples/08_speech.py)
+- [09_multimodal.py](examples/09_multimodal.py)
+- [10_embeddings.py](examples/10_embeddings.py)
+- [11_translation.py](examples/11_translation.py)
+- [12_redaction.py](examples/12_redaction.py)
 

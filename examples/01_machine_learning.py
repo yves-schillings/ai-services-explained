@@ -1,6 +1,6 @@
 """Train a tiny text classifier on fictional service tickets.
 
-Run: python "01_machine_learning - Codex.py"
+Run: python "01_machine_learning.py"
 This is a real fitted multinomial naive Bayes model, not keyword rules.
 The tiny holdout illustrates evaluation, not an enterprise accuracy claim.
 """

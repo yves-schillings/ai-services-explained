@@ -1,6 +1,6 @@
 """Semantic retrieval and local generation with an explicit access filter.
 
-Run: python "05_rag - Codex.py" --model YOUR_LOCAL_LLM --embedding YOUR_LOCAL_EMBEDDER
+Run: python "05_rag.py" --model YOUR_LOCAL_LLM --embedding YOUR_LOCAL_EMBEDDER
 Fictional in-memory grants are server-side teaching data, not production identity.
 """
 

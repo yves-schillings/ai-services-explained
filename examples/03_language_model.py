@@ -1,6 +1,7 @@
-"""Draft a translation with a separately provisioned local language model.
-Run: python "11_translation - Codex.py" --model YOUR_LOCAL_MODEL
-Numbers, negation and domain terms require a bilingual reviewer.
+"""Ask a preinstalled LOCAL language model a question.
+
+Run: python "03_language_model.py" --model YOUR_LOCAL_MODEL
+Provision and license the model separately. This script never downloads weights.
 """
 
 import json
@@ -24,8 +25,9 @@ def chat(model, messages, schema=None):
         payload["format"] = schema
     return local_api("chat", payload)["message"]["content"]
 
-if __name__=="__main__":
+if __name__ == "__main__":
     import argparse
-    p=argparse.ArgumentParser();p.add_argument("--model",required=True);a=p.parse_args()
-    print(chat(a.model,[{"role":"system","content":"Translate French to Dutch. Preserve LAB-01, 10:12 and negation. Output only the translation."},
-                        {"role":"user","content":"Le serveur LAB-01 a redémarré à 10:12. La cause n’est pas confirmée."}]))
+    p = argparse.ArgumentParser(); p.add_argument("--model", required=True)
+    args = p.parse_args()
+    print(chat(args.model, [{"role": "system", "content": "Explain clearly. Say when unsure."},
+                           {"role": "user", "content": "Explain the difference between training and inference."}]))

@@ -1,6 +1,6 @@
 """Train a small two-hidden-layer neural network on fictional sensor flags.
 
-Run: python "02_deep_learning - Codex.py"
+Run: python "02_deep_learning.py"
 Requires numpy. XOR is an educational nonlinear problem, not a maintenance model.
 No GPU or downloaded weights. Train and evaluation data overlap intentionally:
 the result is a learning demonstration, not a generalisation benchmark.

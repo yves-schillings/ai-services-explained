@@ -1,7 +1,5 @@
-"""Ask a preinstalled LOCAL language model a question.
-
-Run: python "03_language_model - Codex.py" --model YOUR_LOCAL_MODEL
-Provision and license the model separately. This script never downloads weights.
+"""Produce real text embeddings with a preinstalled local embedding model.
+Run: python "10_embeddings.py" --model YOUR_LOCAL_EMBEDDING_MODEL
 """
 
 import json
@@ -25,9 +23,8 @@ def chat(model, messages, schema=None):
         payload["format"] = schema
     return local_api("chat", payload)["message"]["content"]
 
-if __name__ == "__main__":
+if __name__=="__main__":
     import argparse
-    p = argparse.ArgumentParser(); p.add_argument("--model", required=True)
-    args = p.parse_args()
-    print(chat(args.model, [{"role": "system", "content": "Explain clearly. Say when unsure."},
-                           {"role": "user", "content": "Explain the difference between training and inference."}]))
+    p=argparse.ArgumentParser();p.add_argument("--model",required=True);a=p.parse_args()
+    vectors=local_api("embed",{"model":a.model,"input":["Server restart","Reboot the machine"]})["embeddings"]
+    print(json.dumps({"vectors":len(vectors),"dimensions":[len(v) for v in vectors]}))

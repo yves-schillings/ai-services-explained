@@ -5,9 +5,9 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-ROOT=Path(__file__).resolve().parent
+ROOT=Path(__file__).resolve().parents[1]
 def load(prefix):
-    p=next((ROOT/'examples').glob(prefix+'* - Codex.py'))
+    p=next((ROOT/'examples').glob(prefix+'_*.py'))
     spec=importlib.util.spec_from_file_location('example_'+prefix,p)
     module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
     return module

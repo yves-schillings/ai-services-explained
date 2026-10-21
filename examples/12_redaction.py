@@ -1,6 +1,6 @@
 """Mask obvious email addresses in a fictional note.
 
-Run: python "12_redaction - Codex.py"
+Run: python "12_redaction.py"
 This is a baseline control, NOT an anonymisation system or permission to export data.
 Names, indirect identifiers and re-identification remain outside this detector.
 """

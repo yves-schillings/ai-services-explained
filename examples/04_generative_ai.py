@@ -1,6 +1,6 @@
 """Generate a structured draft from a fictional incident note.
 
-Run: python "04_generative_ai - Codex.py" --model YOUR_LOCAL_MODEL
+Run: python "04_generative_ai.py" --model YOUR_LOCAL_MODEL
 JSON structure validation does not establish factual accuracy. Review is mandatory.
 """
 

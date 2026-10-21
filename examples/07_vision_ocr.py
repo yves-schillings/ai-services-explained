@@ -1,6 +1,6 @@
 """Read a local scan with a separately installed Tesseract executable.
 
-Run: python "07_vision_ocr - Codex.py" sample.png --language eng
+Run: python "07_vision_ocr.py" sample.png --language eng
 Install the engine and selected language data first. OCR output is unverified text.
 """
 from pathlib import Path

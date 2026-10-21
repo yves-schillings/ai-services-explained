@@ -1,6 +1,6 @@
 """A bounded local-model agent can read one fictional ticket and then stop.
 
-Run: python "06_agent - Codex.py" --model YOUR_LOCAL_MODEL
+Run: python "06_agent.py" --model YOUR_LOCAL_MODEL
 No shell, no arbitrary file access, no write tool. Test actor is fixed by the app.
 """
 

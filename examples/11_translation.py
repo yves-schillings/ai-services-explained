@@ -1,5 +1,6 @@
-"""Produce real text embeddings with a preinstalled local embedding model.
-Run: python "10_embeddings - Codex.py" --model YOUR_LOCAL_EMBEDDING_MODEL
+"""Draft a translation with a separately provisioned local language model.
+Run: python "11_translation.py" --model YOUR_LOCAL_MODEL
+Numbers, negation and domain terms require a bilingual reviewer.
 """
 
 import json
@@ -26,5 +27,5 @@ def chat(model, messages, schema=None):
 if __name__=="__main__":
     import argparse
     p=argparse.ArgumentParser();p.add_argument("--model",required=True);a=p.parse_args()
-    vectors=local_api("embed",{"model":a.model,"input":["Server restart","Reboot the machine"]})["embeddings"]
-    print(json.dumps({"vectors":len(vectors),"dimensions":[len(v) for v in vectors]}))
+    print(chat(a.model,[{"role":"system","content":"Translate French to Dutch. Preserve LAB-01, 10:12 and negation. Output only the translation."},
+                        {"role":"user","content":"Le serveur LAB-01 a redémarré à 10:12. La cause n’est pas confirmée."}]))
