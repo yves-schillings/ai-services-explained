@@ -1,6 +1,6 @@
 {
-  "threshold_95th_percentile": 0.01124,
-  "usual_pages_flagged": 0.06,
+  "threshold_95th_percentile": 0.0112,
+  "usual_pages_flagged": 0.063,
   "unusual_pages_flagged": 1.0,
   "history": [
     {
@@ -33,7 +33,7 @@
     },
     {
       "epoch": 8,
-      "val_reconstruction_error": 0.01081
+      "val_reconstruction_error": 0.0108
     },
     {
       "epoch": 9,
@@ -41,11 +41,11 @@
     },
     {
       "epoch": 10,
-      "val_reconstruction_error": 0.00928
+      "val_reconstruction_error": 0.00924
     },
     {
       "epoch": 11,
-      "val_reconstruction_error": 0.00885
+      "val_reconstruction_error": 0.00882
     },
     {
       "epoch": 12,
@@ -53,19 +53,19 @@
     },
     {
       "epoch": 13,
-      "val_reconstruction_error": 0.00818
+      "val_reconstruction_error": 0.00831
     },
     {
       "epoch": 14,
-      "val_reconstruction_error": 0.00794
+      "val_reconstruction_error": 0.00798
     },
     {
       "epoch": 15,
-      "val_reconstruction_error": 0.0078
+      "val_reconstruction_error": 0.00781
     },
     {
       "epoch": 16,
-      "val_reconstruction_error": 0.00774
+      "val_reconstruction_error": 0.00775
     },
     {
       "epoch": 17,
@@ -81,7 +81,7 @@
     },
     {
       "epoch": 20,
-      "val_reconstruction_error": 0.00735
+      "val_reconstruction_error": 0.00734
     }
   ]
 }

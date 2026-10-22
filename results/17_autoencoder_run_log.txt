@@ -1,2 +1,2 @@
-Threshold: 0.01124 | usual pages flagged: 0.06 | unusual pages flagged: 1.0
+Threshold: 0.0112 | usual pages flagged: 0.063 | unusual pages flagged: 1.0
 Action: a flagged page goes to a person before any automatic classification.

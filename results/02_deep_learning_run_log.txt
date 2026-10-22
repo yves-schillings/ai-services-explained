@@ -1,4 +1,9 @@
+<Python packages>/torch\export\pt2_archive\_package.py:793: UserWarning: The given buffer is not writable, and PyTorch does not support non-writable tensors. This means you can write to the underlying (supposedly non-writable) buffer using the tensor. You may want to copy the buffer to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\torch\csrc\utils\tensor_new.cpp:1582.)
+  tensor = torch.frombuffer(
+Successfully registered model 'page-layout-cnn'.
+Created version '1' of model 'page-layout-cnn'.
 MLP: 139,651 weights, stopped after 30 epochs, best epoch 30. Clean test 0.982, hard test 0.887
-CNN: 89,091 weights, stopped after 25 epochs, best epoch 20. Clean test 0.990, hard test 0.935
-Few labels, clean test accuracy: {'from_scratch': 0.9367, 'feature_extraction': 0.8483, 'full_fine_tuning': 0.95}
-Done in 23.4 s. Artifact page_layout_cnn.pt and manifest written.
+CNN: 89,091 weights, stopped after 13 epochs, best epoch 8. Clean test 0.985, hard test 0.932
+CNN registered as version 1 of page-layout-cnn. Reloaded from the registry, same predictions: True
+Few labels, clean test accuracy over 5 seeds: {'from_scratch': '0.921 +/- 0.036', 'feature_extraction': '0.960 +/- 0.015', 'full_fine_tuning': '0.923 +/- 0.056'} - best mode per seed: {'from_scratch': 0, 'feature_extraction': 3, 'full_fine_tuning': 2}
+Done in 49.9 s with 4 CPU threads.

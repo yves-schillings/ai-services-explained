@@ -1,0 +1,6 @@
+   Validation code: Version 1: test_macro_f1 0.8196 is below the gate 0.85. It cannot be approved.
+Version 1 (100 cases): denied
+Version 2 (200 cases): approved
+Version 3 (400 cases): approved
+Live version: 3 - MLflow alias live -> 3
+Rollback drill: version 3 withdrawn, version 2 becomes live.

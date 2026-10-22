@@ -1,0 +1,32 @@
+{
+  "gate": {
+    "metric": "test_macro_f1",
+    "minimum": 0.85
+  },
+  "owner": "document intake service owner (fictional)",
+  "decisions": [
+    {
+      "version": "1",
+      "labelled_cases": "100",
+      "decision": "denied"
+    },
+    {
+      "version": "2",
+      "labelled_cases": "200",
+      "decision": "approved"
+    },
+    {
+      "version": "3",
+      "labelled_cases": "400",
+      "decision": "approved"
+    }
+  ],
+  "live_version": "3",
+  "live_model_sha256": "e00a1ebda2108af9f0d2bc84bc5c1dfa908b626492c9d592f81e4792cf1ce2d7",
+  "rollback_drill": {
+    "withdrawn": "3",
+    "live_after_rollback": "2"
+  },
+  "approval_record": "approvals/document-triage.json (kept apart from the model files)",
+  "command": "python examples/19_model_release.py"
+}
