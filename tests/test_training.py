@@ -196,3 +196,14 @@ def test_frozen_layers_do_not_change_and_validation_does_not_train():
     dl01.fit(model, train, val, epochs=2)
     assert torch.equal(conv, model.c1.weight)
     assert not torch.equal(head, model.head.weight)
+
+
+def test_lora_example_tests_on_new_wording_and_unseen_pairs():
+    lora = load("20")
+    train, test = lora.make_data()
+    assert not {r["message"] for r in train} & {r["message"] for r in test}
+    assert not any(r["unseen_pair"] for r in train)
+    assert sum(r["unseen_pair"] for r in test) == 6
+    row = {"system": "Heron", "state": "bricked"}
+    assert lora.correct("The payroll server does not start.", row)
+    assert not lora.correct("Heron is bricked again.", row)

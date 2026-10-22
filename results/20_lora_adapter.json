@@ -1,0 +1,1167 @@
+{
+  "model": "Qwen/Qwen3-0.6B",
+  "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+  "device": "NVIDIA GeForce RTX 2080 Ti",
+  "versions": {
+    "torch": "2.8.0+cu126",
+    "transformers": "4.57.1",
+    "peft": "0.17.1"
+  },
+  "layers": 28,
+  "base_weights": 596049920,
+  "tables_in_layer_0": [
+    {
+      "name": "model.layers.0.self_attn.q_proj",
+      "out": 2048,
+      "in": 1024,
+      "weights": 2097152
+    },
+    {
+      "name": "model.layers.0.self_attn.k_proj",
+      "out": 1024,
+      "in": 1024,
+      "weights": 1048576
+    },
+    {
+      "name": "model.layers.0.self_attn.v_proj",
+      "out": 1024,
+      "in": 1024,
+      "weights": 1048576
+    },
+    {
+      "name": "model.layers.0.self_attn.o_proj",
+      "out": 1024,
+      "in": 2048,
+      "weights": 2097152
+    },
+    {
+      "name": "model.layers.0.mlp.gate_proj",
+      "out": 3072,
+      "in": 1024,
+      "weights": 3145728
+    },
+    {
+      "name": "model.layers.0.mlp.up_proj",
+      "out": 3072,
+      "in": 1024,
+      "weights": 3145728
+    },
+    {
+      "name": "model.layers.0.mlp.down_proj",
+      "out": 1024,
+      "in": 3072,
+      "weights": 3145728
+    }
+  ],
+  "train_messages": 56,
+  "test_messages": 27,
+  "unseen_pairs": [
+    [
+      "Kestrel",
+      "ghosting"
+    ],
+    [
+      "Magpie",
+      "a zombie"
+    ]
+  ],
+  "lora": {
+    "r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj"
+    ]
+  },
+  "base": {
+    "correct": 0,
+    "total": 27,
+    "correct_unseen_pairs": 0,
+    "unseen_total": 6,
+    "answers": [
+      {
+        "message": "Good morning, Heron is bricked today.",
+        "expected": "The payroll server does not start.",
+        "system": "Heron",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Good morning, Heron is bricked today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Heron is bricked.",
+        "expected": "The payroll server does not start.",
+        "system": "Heron",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Heron is bricked.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Heron is bricked on floor 3.",
+        "expected": "The payroll server does not start.",
+        "system": "Heron",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Heron is on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Heron is a zombie today.",
+        "expected": "The payroll server runs but does not respond.",
+        "system": "Heron",
+        "state": "a zombie",
+        "unseen_pair": false,
+        "answer": "Good morning, Heron is a zombie today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Heron is a zombie.",
+        "expected": "The payroll server runs but does not respond.",
+        "system": "Heron",
+        "state": "a zombie",
+        "unseen_pair": false,
+        "answer": "Heron is a zombie.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Heron is a zombie on floor 3.",
+        "expected": "The payroll server runs but does not respond.",
+        "system": "Heron",
+        "state": "a zombie",
+        "unseen_pair": false,
+        "answer": "Heron is a zombie on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Heron is ghosting today.",
+        "expected": "The payroll server keeps dropping off the network.",
+        "system": "Heron",
+        "state": "ghosting",
+        "unseen_pair": false,
+        "answer": "Good morning, Heron is ghosting today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Heron is ghosting.",
+        "expected": "The payroll server keeps dropping off the network.",
+        "system": "Heron",
+        "state": "ghosting",
+        "unseen_pair": false,
+        "answer": "Heron is ghosting.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Heron is ghosting on floor 3.",
+        "expected": "The payroll server keeps dropping off the network.",
+        "system": "Heron",
+        "state": "ghosting",
+        "unseen_pair": false,
+        "answer": "Heron is ghosting on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Kestrel is bricked today.",
+        "expected": "The visitor badge system does not start.",
+        "system": "Kestrel",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Good morning, Kestrel is bricked today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Kestrel is bricked.",
+        "expected": "The visitor badge system does not start.",
+        "system": "Kestrel",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Not sure why, but Kestrel is bricked.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Kestrel is bricked on floor 3.",
+        "expected": "The visitor badge system does not start.",
+        "system": "Kestrel",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Kestrel is bricked on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Kestrel is a zombie today.",
+        "expected": "The visitor badge system runs but does not respond.",
+        "system": "Kestrel",
+        "state": "a zombie",
+        "unseen_pair": false,
+        "answer": "Good morning, Kestrel is a zombie today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Kestrel is a zombie.",
+        "expected": "The visitor badge system runs but does not respond.",
+        "system": "Kestrel",
+        "state": "a zombie",
+        "unseen_pair": false,
+        "answer": "Not sure why, but Kestrel is a zombie.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Kestrel is a zombie on floor 3.",
+        "expected": "The visitor badge system runs but does not respond.",
+        "system": "Kestrel",
+        "state": "a zombie",
+        "unseen_pair": false,
+        "answer": "Kestrel is a zombie on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Kestrel is ghosting today.",
+        "expected": "The visitor badge system keeps dropping off the network.",
+        "system": "Kestrel",
+        "state": "ghosting",
+        "unseen_pair": true,
+        "answer": "Good morning, Kestrel is ghosting today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Kestrel is ghosting.",
+        "expected": "The visitor badge system keeps dropping off the network.",
+        "system": "Kestrel",
+        "state": "ghosting",
+        "unseen_pair": true,
+        "answer": "Not sure why, but Kestrel is ghosting.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Kestrel is ghosting on floor 3.",
+        "expected": "The visitor badge system keeps dropping off the network.",
+        "system": "Kestrel",
+        "state": "ghosting",
+        "unseen_pair": true,
+        "answer": "Kestrel is ghosting on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Magpie is bricked today.",
+        "expected": "The shared printer does not start.",
+        "system": "Magpie",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Good morning, Magpie is bricked today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Magpie is bricked.",
+        "expected": "The shared printer does not start.",
+        "system": "Magpie",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Not sure why, but Magpie is bricked.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Magpie is bricked on floor 3.",
+        "expected": "The shared printer does not start.",
+        "system": "Magpie",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "The magpie is bricked on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Magpie is a zombie today.",
+        "expected": "The shared printer runs but does not respond.",
+        "system": "Magpie",
+        "state": "a zombie",
+        "unseen_pair": true,
+        "answer": "Good morning, Magpie is a zombie today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Magpie is a zombie.",
+        "expected": "The shared printer runs but does not respond.",
+        "system": "Magpie",
+        "state": "a zombie",
+        "unseen_pair": true,
+        "answer": "Not sure why, but Magpie is a zombie.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Magpie is a zombie on floor 3.",
+        "expected": "The shared printer runs but does not respond.",
+        "system": "Magpie",
+        "state": "a zombie",
+        "unseen_pair": true,
+        "answer": "Magpie is a zombie on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Magpie is ghosting today.",
+        "expected": "The shared printer keeps dropping off the network.",
+        "system": "Magpie",
+        "state": "ghosting",
+        "unseen_pair": false,
+        "answer": "Good morning, Magpie is ghosting today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Magpie is ghosting.",
+        "expected": "The shared printer keeps dropping off the network.",
+        "system": "Magpie",
+        "state": "ghosting",
+        "unseen_pair": false,
+        "answer": "Not sure why, but Magpie is ghosting.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Magpie is ghosting on floor 3.",
+        "expected": "The shared printer keeps dropping off the network.",
+        "system": "Magpie",
+        "state": "ghosting",
+        "unseen_pair": false,
+        "answer": "Magpie is ghosting on floor 3.",
+        "correct": false
+      }
+    ]
+  },
+  "base_with_glossary": {
+    "correct": 0,
+    "total": 27,
+    "correct_unseen_pairs": 0,
+    "unseen_total": 6,
+    "answers": [
+      {
+        "message": "Good morning, Heron is bricked today.",
+        "expected": "The payroll server does not start.",
+        "system": "Heron",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Good morning, Heron is bricked today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Heron is bricked.",
+        "expected": "The payroll server does not start.",
+        "system": "Heron",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Not sure why Heron is bricked.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Heron is bricked on floor 3.",
+        "expected": "The payroll server does not start.",
+        "system": "Heron",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Quick note: Heron is bricked on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Heron is a zombie today.",
+        "expected": "The payroll server runs but does not respond.",
+        "system": "Heron",
+        "state": "a zombie",
+        "unseen_pair": false,
+        "answer": "Good morning, Heron is a zombie today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Heron is a zombie.",
+        "expected": "The payroll server runs but does not respond.",
+        "system": "Heron",
+        "state": "a zombie",
+        "unseen_pair": false,
+        "answer": "Heron is a zombie because it doesn't start.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Heron is a zombie on floor 3.",
+        "expected": "The payroll server runs but does not respond.",
+        "system": "Heron",
+        "state": "a zombie",
+        "unseen_pair": false,
+        "answer": "Heron is a zombie on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Heron is ghosting today.",
+        "expected": "The payroll server keeps dropping off the network.",
+        "system": "Heron",
+        "state": "ghosting",
+        "unseen_pair": false,
+        "answer": "Good morning, Heron is the payroll server, and Kestrel is the visitor badge system, while Magpie is the shared printer.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Heron is ghosting.",
+        "expected": "The payroll server keeps dropping off the network.",
+        "system": "Heron",
+        "state": "ghosting",
+        "unseen_pair": false,
+        "answer": "Heron is the payroll server, and it's ghosting.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Heron is ghosting on floor 3.",
+        "expected": "The payroll server keeps dropping off the network.",
+        "system": "Heron",
+        "state": "ghosting",
+        "unseen_pair": false,
+        "answer": "Heron is running but not responding on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Kestrel is bricked today.",
+        "expected": "The visitor badge system does not start.",
+        "system": "Kestrel",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Good morning. Kestrel is bricked today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Kestrel is bricked.",
+        "expected": "The visitor badge system does not start.",
+        "system": "Kestrel",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Not sure why, but Kestrel is bricked.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Kestrel is bricked on floor 3.",
+        "expected": "The visitor badge system does not start.",
+        "system": "Kestrel",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Kestrel is bricked on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Kestrel is a zombie today.",
+        "expected": "The visitor badge system runs but does not respond.",
+        "system": "Kestrel",
+        "state": "a zombie",
+        "unseen_pair": false,
+        "answer": "Good morning, Kestrel is a zombie today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Kestrel is a zombie.",
+        "expected": "The visitor badge system runs but does not respond.",
+        "system": "Kestrel",
+        "state": "a zombie",
+        "unseen_pair": false,
+        "answer": "Kestrel is a zombie because it runs but doesn't respond.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Kestrel is a zombie on floor 3.",
+        "expected": "The visitor badge system runs but does not respond.",
+        "system": "Kestrel",
+        "state": "a zombie",
+        "unseen_pair": false,
+        "answer": "Kestrel is a zombie on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Kestrel is ghosting today.",
+        "expected": "The visitor badge system keeps dropping off the network.",
+        "system": "Kestrel",
+        "state": "ghosting",
+        "unseen_pair": true,
+        "answer": "Good morning, the Kestrel is ghosting today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Kestrel is ghosting.",
+        "expected": "The visitor badge system keeps dropping off the network.",
+        "system": "Kestrel",
+        "state": "ghosting",
+        "unseen_pair": true,
+        "answer": "Kestrel is ghosting because it keeps dropping off the network.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Kestrel is ghosting on floor 3.",
+        "expected": "The visitor badge system keeps dropping off the network.",
+        "system": "Kestrel",
+        "state": "ghosting",
+        "unseen_pair": true,
+        "answer": "Kestrel is ghosting on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Magpie is bricked today.",
+        "expected": "The shared printer does not start.",
+        "system": "Magpie",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Good morning, the Magpie is bricked today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Magpie is bricked.",
+        "expected": "The shared printer does not start.",
+        "system": "Magpie",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Not sure why, but the Magpie is bricked.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Magpie is bricked on floor 3.",
+        "expected": "The shared printer does not start.",
+        "system": "Magpie",
+        "state": "bricked",
+        "unseen_pair": false,
+        "answer": "Magpie is bricked on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Magpie is a zombie today.",
+        "expected": "The shared printer runs but does not respond.",
+        "system": "Magpie",
+        "state": "a zombie",
+        "unseen_pair": true,
+        "answer": "Good morning, the Magpie is a zombie.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Magpie is a zombie.",
+        "expected": "The shared printer runs but does not respond.",
+        "system": "Magpie",
+        "state": "a zombie",
+        "unseen_pair": true,
+        "answer": "Not sure why, but the Magpie is a zombie.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Magpie is a zombie on floor 3.",
+        "expected": "The shared printer runs but does not respond.",
+        "system": "Magpie",
+        "state": "a zombie",
+        "unseen_pair": true,
+        "answer": "Magpie is a zombie on floor 3.",
+        "correct": false
+      },
+      {
+        "message": "Good morning, Magpie is ghosting today.",
+        "expected": "The shared printer keeps dropping off the network.",
+        "system": "Magpie",
+        "state": "ghosting",
+        "unseen_pair": false,
+        "answer": "Good morning, the Magpie is ghosting today.",
+        "correct": false
+      },
+      {
+        "message": "Not sure why, but Magpie is ghosting.",
+        "expected": "The shared printer keeps dropping off the network.",
+        "system": "Magpie",
+        "state": "ghosting",
+        "unseen_pair": false,
+        "answer": "Not sure why, but the Magpie is ghosting.",
+        "correct": false
+      },
+      {
+        "message": "Quick note: Magpie is ghosting on floor 3.",
+        "expected": "The shared printer keeps dropping off the network.",
+        "system": "Magpie",
+        "state": "ghosting",
+        "unseen_pair": false,
+        "answer": "Magpie is ghosting on floor 3.",
+        "correct": false
+      }
+    ]
+  },
+  "all_layers": {
+    "layers_with_pairs": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27
+    ],
+    "pairs": 112,
+    "small_tables": 224,
+    "first_pair": {
+      "name": "model.layers.0.self_attn.q_proj",
+      "A_numbers_in": 1024,
+      "A_numbers_out": 16,
+      "B_numbers_in": 16,
+      "B_numbers_out": 2048,
+      "B_all_zero_at_start": true
+    },
+    "trainable_weights": 4587520,
+    "training": {
+      "epochs": 4,
+      "learning_rate": 0.001,
+      "steps": 224,
+      "seconds": 70.3,
+      "first_epoch_mean_loss": 0.8607,
+      "last_epoch_mean_loss": 0.0445,
+      "peak_gpu_gb": 1.43
+    },
+    "test": {
+      "correct": 27,
+      "total": 27,
+      "correct_unseen_pairs": 6,
+      "unseen_total": 6,
+      "answers": [
+        {
+          "message": "Good morning, Heron is bricked today.",
+          "expected": "The payroll server does not start.",
+          "system": "Heron",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The payroll server does not start.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Heron is bricked.",
+          "expected": "The payroll server does not start.",
+          "system": "Heron",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The payroll server does not start.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Heron is bricked on floor 3.",
+          "expected": "The payroll server does not start.",
+          "system": "Heron",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The payroll server does not start.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Heron is a zombie today.",
+          "expected": "The payroll server runs but does not respond.",
+          "system": "Heron",
+          "state": "a zombie",
+          "unseen_pair": false,
+          "answer": "The payroll server runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Heron is a zombie.",
+          "expected": "The payroll server runs but does not respond.",
+          "system": "Heron",
+          "state": "a zombie",
+          "unseen_pair": false,
+          "answer": "The payroll server runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Heron is a zombie on floor 3.",
+          "expected": "The payroll server runs but does not respond.",
+          "system": "Heron",
+          "state": "a zombie",
+          "unseen_pair": false,
+          "answer": "The payroll server runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Heron is ghosting today.",
+          "expected": "The payroll server keeps dropping off the network.",
+          "system": "Heron",
+          "state": "ghosting",
+          "unseen_pair": false,
+          "answer": "The payroll server keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Heron is ghosting.",
+          "expected": "The payroll server keeps dropping off the network.",
+          "system": "Heron",
+          "state": "ghosting",
+          "unseen_pair": false,
+          "answer": "The payroll server keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Heron is ghosting on floor 3.",
+          "expected": "The payroll server keeps dropping off the network.",
+          "system": "Heron",
+          "state": "ghosting",
+          "unseen_pair": false,
+          "answer": "The payroll server keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Kestrel is bricked today.",
+          "expected": "The visitor badge system does not start.",
+          "system": "Kestrel",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The visitor badge system does not start.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Kestrel is bricked.",
+          "expected": "The visitor badge system does not start.",
+          "system": "Kestrel",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The visitor badge system does not start.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Kestrel is bricked on floor 3.",
+          "expected": "The visitor badge system does not start.",
+          "system": "Kestrel",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The visitor badge system does not start.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Kestrel is a zombie today.",
+          "expected": "The visitor badge system runs but does not respond.",
+          "system": "Kestrel",
+          "state": "a zombie",
+          "unseen_pair": false,
+          "answer": "The visitor badge system runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Kestrel is a zombie.",
+          "expected": "The visitor badge system runs but does not respond.",
+          "system": "Kestrel",
+          "state": "a zombie",
+          "unseen_pair": false,
+          "answer": "The visitor badge system runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Kestrel is a zombie on floor 3.",
+          "expected": "The visitor badge system runs but does not respond.",
+          "system": "Kestrel",
+          "state": "a zombie",
+          "unseen_pair": false,
+          "answer": "The visitor badge system runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Kestrel is ghosting today.",
+          "expected": "The visitor badge system keeps dropping off the network.",
+          "system": "Kestrel",
+          "state": "ghosting",
+          "unseen_pair": true,
+          "answer": "The visitor badge system keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Kestrel is ghosting.",
+          "expected": "The visitor badge system keeps dropping off the network.",
+          "system": "Kestrel",
+          "state": "ghosting",
+          "unseen_pair": true,
+          "answer": "The visitor badge system keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Kestrel is ghosting on floor 3.",
+          "expected": "The visitor badge system keeps dropping off the network.",
+          "system": "Kestrel",
+          "state": "ghosting",
+          "unseen_pair": true,
+          "answer": "The visitor badge system keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Magpie is bricked today.",
+          "expected": "The shared printer does not start.",
+          "system": "Magpie",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The shared printer does not start.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Magpie is bricked.",
+          "expected": "The shared printer does not start.",
+          "system": "Magpie",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The shared printer does not start.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Magpie is bricked on floor 3.",
+          "expected": "The shared printer does not start.",
+          "system": "Magpie",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The shared printer does not start.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Magpie is a zombie today.",
+          "expected": "The shared printer runs but does not respond.",
+          "system": "Magpie",
+          "state": "a zombie",
+          "unseen_pair": true,
+          "answer": "The shared printer runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Magpie is a zombie.",
+          "expected": "The shared printer runs but does not respond.",
+          "system": "Magpie",
+          "state": "a zombie",
+          "unseen_pair": true,
+          "answer": "The shared printer runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Magpie is a zombie on floor 3.",
+          "expected": "The shared printer runs but does not respond.",
+          "system": "Magpie",
+          "state": "a zombie",
+          "unseen_pair": true,
+          "answer": "The shared printer runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Magpie is ghosting today.",
+          "expected": "The shared printer keeps dropping off the network.",
+          "system": "Magpie",
+          "state": "ghosting",
+          "unseen_pair": false,
+          "answer": "The shared printer keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Magpie is ghosting.",
+          "expected": "The shared printer keeps dropping off the network.",
+          "system": "Magpie",
+          "state": "ghosting",
+          "unseen_pair": false,
+          "answer": "The shared printer keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Magpie is ghosting on floor 3.",
+          "expected": "The shared printer keeps dropping off the network.",
+          "system": "Magpie",
+          "state": "ghosting",
+          "unseen_pair": false,
+          "answer": "The shared printer keeps dropping off the network.",
+          "correct": true
+        }
+      ]
+    }
+  },
+  "last_8": {
+    "layers_with_pairs": [
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27
+    ],
+    "pairs": 32,
+    "small_tables": 64,
+    "first_pair": {
+      "name": "model.layers.20.self_attn.q_proj",
+      "A_numbers_in": 1024,
+      "A_numbers_out": 16,
+      "B_numbers_in": 16,
+      "B_numbers_out": 2048,
+      "B_all_zero_at_start": true
+    },
+    "trainable_weights": 1310720,
+    "training": {
+      "epochs": 4,
+      "learning_rate": 0.001,
+      "steps": 224,
+      "seconds": 31.9,
+      "first_epoch_mean_loss": 1.0448,
+      "last_epoch_mean_loss": 0.0,
+      "peak_gpu_gb": 1.32
+    },
+    "test": {
+      "correct": 27,
+      "total": 27,
+      "correct_unseen_pairs": 6,
+      "unseen_total": 6,
+      "answers": [
+        {
+          "message": "Good morning, Heron is bricked today.",
+          "expected": "The payroll server does not start.",
+          "system": "Heron",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The payroll server does not start.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Heron is bricked.",
+          "expected": "The payroll server does not start.",
+          "system": "Heron",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The payroll server does not start.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Heron is bricked on floor 3.",
+          "expected": "The payroll server does not start.",
+          "system": "Heron",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The payroll server does not start.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Heron is a zombie today.",
+          "expected": "The payroll server runs but does not respond.",
+          "system": "Heron",
+          "state": "a zombie",
+          "unseen_pair": false,
+          "answer": "The payroll server runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Heron is a zombie.",
+          "expected": "The payroll server runs but does not respond.",
+          "system": "Heron",
+          "state": "a zombie",
+          "unseen_pair": false,
+          "answer": "The payroll server runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Heron is a zombie on floor 3.",
+          "expected": "The payroll server runs but does not respond.",
+          "system": "Heron",
+          "state": "a zombie",
+          "unseen_pair": false,
+          "answer": "The payroll server runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Heron is ghosting today.",
+          "expected": "The payroll server keeps dropping off the network.",
+          "system": "Heron",
+          "state": "ghosting",
+          "unseen_pair": false,
+          "answer": "The payroll server keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Heron is ghosting.",
+          "expected": "The payroll server keeps dropping off the network.",
+          "system": "Heron",
+          "state": "ghosting",
+          "unseen_pair": false,
+          "answer": "The payroll server keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Heron is ghosting on floor 3.",
+          "expected": "The payroll server keeps dropping off the network.",
+          "system": "Heron",
+          "state": "ghosting",
+          "unseen_pair": false,
+          "answer": "The payroll server keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Kestrel is bricked today.",
+          "expected": "The visitor badge system does not start.",
+          "system": "Kestrel",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The visitor badge system does not start.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Kestrel is bricked.",
+          "expected": "The visitor badge system does not start.",
+          "system": "Kestrel",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The visitor badge system does not start.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Kestrel is bricked on floor 3.",
+          "expected": "The visitor badge system does not start.",
+          "system": "Kestrel",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The visitor badge system does not start.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Kestrel is a zombie today.",
+          "expected": "The visitor badge system runs but does not respond.",
+          "system": "Kestrel",
+          "state": "a zombie",
+          "unseen_pair": false,
+          "answer": "The visitor badge system runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Kestrel is a zombie.",
+          "expected": "The visitor badge system runs but does not respond.",
+          "system": "Kestrel",
+          "state": "a zombie",
+          "unseen_pair": false,
+          "answer": "The visitor badge system runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Kestrel is a zombie on floor 3.",
+          "expected": "The visitor badge system runs but does not respond.",
+          "system": "Kestrel",
+          "state": "a zombie",
+          "unseen_pair": false,
+          "answer": "The visitor badge system runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Kestrel is ghosting today.",
+          "expected": "The visitor badge system keeps dropping off the network.",
+          "system": "Kestrel",
+          "state": "ghosting",
+          "unseen_pair": true,
+          "answer": "The visitor badge system keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Kestrel is ghosting.",
+          "expected": "The visitor badge system keeps dropping off the network.",
+          "system": "Kestrel",
+          "state": "ghosting",
+          "unseen_pair": true,
+          "answer": "The visitor badge system keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Kestrel is ghosting on floor 3.",
+          "expected": "The visitor badge system keeps dropping off the network.",
+          "system": "Kestrel",
+          "state": "ghosting",
+          "unseen_pair": true,
+          "answer": "The visitor badge system keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Magpie is bricked today.",
+          "expected": "The shared printer does not start.",
+          "system": "Magpie",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The shared printer does not start.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Magpie is bricked.",
+          "expected": "The shared printer does not start.",
+          "system": "Magpie",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The shared printer does not start.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Magpie is bricked on floor 3.",
+          "expected": "The shared printer does not start.",
+          "system": "Magpie",
+          "state": "bricked",
+          "unseen_pair": false,
+          "answer": "The shared printer does not start.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Magpie is a zombie today.",
+          "expected": "The shared printer runs but does not respond.",
+          "system": "Magpie",
+          "state": "a zombie",
+          "unseen_pair": true,
+          "answer": "The shared printer runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Magpie is a zombie.",
+          "expected": "The shared printer runs but does not respond.",
+          "system": "Magpie",
+          "state": "a zombie",
+          "unseen_pair": true,
+          "answer": "The shared printer runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Magpie is a zombie on floor 3.",
+          "expected": "The shared printer runs but does not respond.",
+          "system": "Magpie",
+          "state": "a zombie",
+          "unseen_pair": true,
+          "answer": "The shared printer runs but does not respond.",
+          "correct": true
+        },
+        {
+          "message": "Good morning, Magpie is ghosting today.",
+          "expected": "The shared printer keeps dropping off the network.",
+          "system": "Magpie",
+          "state": "ghosting",
+          "unseen_pair": false,
+          "answer": "The shared printer keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Not sure why, but Magpie is ghosting.",
+          "expected": "The shared printer keeps dropping off the network.",
+          "system": "Magpie",
+          "state": "ghosting",
+          "unseen_pair": false,
+          "answer": "The shared printer keeps dropping off the network.",
+          "correct": true
+        },
+        {
+          "message": "Quick note: Magpie is ghosting on floor 3.",
+          "expected": "The shared printer keeps dropping off the network.",
+          "system": "Magpie",
+          "state": "ghosting",
+          "unseen_pair": false,
+          "answer": "The shared printer keeps dropping off the network.",
+          "correct": true
+        }
+      ]
+    }
+  }
+}

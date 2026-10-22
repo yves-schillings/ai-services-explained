@@ -1,0 +1,24 @@
+Qwen3-0.6B: 28 layers, 596,049,920 weights. Tables in each layer:
+  model.layers.0.self_attn.q_proj       1024 numbers in,  2048 out,  2,097,152 weights
+  model.layers.0.self_attn.k_proj       1024 numbers in,  1024 out,  1,048,576 weights
+  model.layers.0.self_attn.v_proj       1024 numbers in,  1024 out,  1,048,576 weights
+  model.layers.0.self_attn.o_proj       2048 numbers in,  1024 out,  2,097,152 weights
+  model.layers.0.mlp.gate_proj          1024 numbers in,  3072 out,  3,145,728 weights
+  model.layers.0.mlp.up_proj            1024 numbers in,  3072 out,  3,145,728 weights
+  model.layers.0.mlp.down_proj          3072 numbers in,  1024 out,  3,145,728 weights
+Base model, no glossary
+Base model, glossary in the prompt
+LoRA all_layers: 112 pairs A+B in layers 0 to 27, 4,587,520 weights learn
+  epoch 1: mean error 0.8607
+  epoch 2: mean error 0.0039
+  epoch 3: mean error 0.1326
+  epoch 4: mean error 0.0445
+LoRA last_8: 32 pairs A+B in layers 20 to 27, 1,310,720 weights learn
+  epoch 1: mean error 1.0448
+  epoch 2: mean error 0.0228
+  epoch 3: mean error 0.0001
+  epoch 4: mean error 0.0000
+base: 0/27
+base_with_glossary: 0/27
+all_layers: 27/27 (unseen pairs 6/6), 70.3 s, peak 1.43 GB
+last_8: 27/27 (unseen pairs 6/6), 31.9 s, peak 1.32 GB

@@ -1,0 +1,7 @@
+# Optional: example 20, LoRA on Qwen3-0.6B (not needed for the tests). It needs a CUDA GPU.
+# Versions used for results/20_lora_adapter.json. Install torch with CUDA first, for example:
+#   pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu126
+transformers==4.57.1
+peft==0.17.1
+huggingface_hub==0.36.2
+safetensors==0.8.0

@@ -4,3 +4,4 @@ approvals/
 __pycache__/
 *.pyc
 .pytest_cache/
+models/

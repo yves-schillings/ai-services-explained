@@ -52,6 +52,20 @@ python examples/17_autoencoder.py             # autoencoder for unusual pages
 python -m pytest tests -q
 ```
 
+Example 20 adapts a small language model with LoRA. It needs a CUDA GPU (peak 1,43 GB),
+the optional packages and the pinned public Qwen3-0.6B weights in a local folder:
+
+```bash
+python -m pip install -r requirements-lora.txt
+python -c "from huggingface_hub import snapshot_download; snapshot_download('Qwen/Qwen3-0.6B', revision='c1899de289a04d12100db370d81485cdf75e47ca', local_dir='models/qwen3-0.6b')"
+python examples/20_lora_adapter.py --model-dir models/qwen3-0.6b   # which layers get A and B, training, test
+```
+
+It lists the 7 tables of weights inside each of the 28 layers, adds an A/B pair beside
+q_proj, k_proj, v_proj and o_proj (`target_modules`) in all layers or only the last 8
+(`layers_to_transform`), trains only A and B on fictional help-desk messages with code
+words and slang, and tests on new wordings. Keep `models/` out of Git.
+
 Roll back the live version:
 
 ```powershell
@@ -160,6 +174,7 @@ fictional data, not the quality of any production system.
 - **15**: unsupervised anomaly scores. An anomaly is never evidence of wrongdoing.
 - **16**: why a time series needs a temporal split, and a leaky centred average.
 - **17**: learning a representation without labels.
+- **20**: LoRA. A and B learn new words beside frozen tables; the choice of layers is explicit.
 - **18 and 19**: go-live decided by a gate and a named owner, served only after checks,
   and rolled back by withdrawing the live version.
 
