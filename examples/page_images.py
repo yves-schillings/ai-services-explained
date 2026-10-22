@@ -12,7 +12,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 SIZE = 32
-PAGE_TYPES = ["witness_statement", "incident_report", "evidence_inventory"]
+PAGE_TYPES = ["meeting_minutes", "incident_report", "item_inventory"]
 GENERIC_PIECES = ["text_block", "table", "stamps", "check_boxes", "dialogue_lines", "header_and_signature"]
 
 
@@ -49,7 +49,7 @@ def draw_page(kind, rng):
     img = Image.new("L", (128, 128), 255)
     d = ImageDraw.Draw(img)
     d.rectangle([8, 6, 120, 16], fill=rng.randint(0, 90))          # header bar on every page
-    if kind == 0:                                                   # witness statement: alternating lines
+    if kind == 0:                                                   # meeting minutes: alternating lines
         _lines(d, rng, 12, 26, 116, 118, rng.randint(9, 12), indent=True)
     elif kind == 1:                                                 # incident report: boxes, then lines
         rows, cols = rng.randint(3, 4), rng.randint(2, 3)
@@ -58,7 +58,7 @@ def draw_page(kind, rng):
                 x, y = 12 + c * (104 // cols), 24 + r * 14
                 d.rectangle([x, y, x + 104 // cols - 4, y + 10], outline=0, width=2)
         _lines(d, rng, 12, 24 + rows * 14 + 6, 116, 118, rng.randint(3, 5))
-    else:                                                           # evidence inventory: check boxes, stamp
+    else:                                                           # item inventory: check boxes, stamp
         for i in range(rng.randint(4, 6)):
             y = 26 + i * 15
             d.rectangle([12, y, 22, y + 9], outline=0, width=2)

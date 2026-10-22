@@ -55,9 +55,9 @@ EXPERIMENT = "document-triage"
 REVIEW_MINUTES = 2.0
 ERROR_MINUTES = 20.0
 # A rule a person could write from the typical words of each type, without any training.
-KEYWORDS = {"witness_statement": ["witness", "statement", "declares"],
-            "incident_report": ["officer", "patrol", "incident"],
-            "evidence_inventory": ["exhibit", "sealed", "inventory"],
+KEYWORDS = {"meeting_minutes": ["worker", "speaker", "decides"],
+            "incident_report": ["operator", "parking", "incident"],
+            "item_inventory": ["extinguisher", "shelved", "inventory"],
             "correspondence": ["dear", "regards", "letter"]}
 
 
@@ -287,7 +287,7 @@ def main():
           "- everything by hand:", final["review_cost"]["everything_by_hand_minutes_per_1000"])
 
     loaded = mlflow.sklearn.load_model(f"models:/{MODEL_NAME}/{final['registered_version']}")
-    sample = predict_with_review(loaded, ["witness saw a person near the harbour in the evening"])
+    sample = predict_with_review(loaded, ["worker saw a person near the hall in the evening"])
     print("9. Inference from the registered version:", sample)
 
     x_test = xy(final_test)[0]

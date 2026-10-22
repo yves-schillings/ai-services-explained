@@ -32,8 +32,8 @@ DATABASE = os.environ["RAG_DATABASE_URL"]
 # Fictional passages about the document intake procedure.
 PASSAGES = {
     "P1": "A document whose type is proposed with a confidence below 0.5 goes to a reviewer before routing.",
-    "P2": "Witness statements are routed to the case officer within one working day.",
-    "P3": "Evidence inventories must list the seal number of every exhibit bag.",
+    "P2": "Meeting minutes are routed to the case handler within one working day.",
+    "P3": "Item inventories must list the label number of every stored item.",
     "P4": "A new model version goes live only after the release owner approves it in the approval record.",
     "P5": "Correspondence is filed with the case and does not change the case status.",
     "P6": "If a live model misbehaves, the release owner withdraws it and the previous approved version serves again.",

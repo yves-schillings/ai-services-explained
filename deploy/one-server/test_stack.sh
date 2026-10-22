@@ -44,7 +44,7 @@ step "Start the application again" bash -c "docker compose up -d --force-recreat
 step "Wait for the application" wait_for http://127.0.0.1:8800/health 180
 step "Health: the approved version is served" json http://127.0.0.1:8800/health
 step "Classify a document" json -X POST http://127.0.0.1:8800/classify -H 'Content-Type: application/json' \
-  -d '{"text": "witness saw a person near the harbour in the evening"}'
+  -d '{"text": "worker saw a person near the hall in the evening"}'
 step "Warm-up: load the LLM into GPU memory (the first call also prepares the GPU kernels)" \
   docker compose exec -T ollama ollama run qwen2.5:0.5b "Reply with OK."
 step "Ask a question: pgvector retrieval, then the LLM on the GPU" json -X POST http://127.0.0.1:8800/ask \

@@ -7,7 +7,7 @@ endpoint.yml): the application gets a token for its own identity and sends it wi
 request. No shared key is stored in the application.
 
   set AZUREML_SCORING_URI=https://document-triage.<region>.inference.ml.azure.com/score
-  python cloud/azure/call_endpoint.py "witness declares she saw a person near the harbour"
+  python cloud/azure/call_endpoint.py "worker remembers she saw a person near the hall"
 
 Data sent: the document text, to the endpoint in the workspace region. The answer is a
 label, a confidence and a review flag. A person types the documents flagged for review.
@@ -32,5 +32,5 @@ def classify(texts, scoring_uri=None, token=None):
 
 
 if __name__ == "__main__":
-    for answer in classify(sys.argv[1:] or ["witness declares she saw a person near the harbour"]):
+    for answer in classify(sys.argv[1:] or ["worker remembers she saw a person near the hall"]):
         print(answer)

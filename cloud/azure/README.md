@@ -23,7 +23,7 @@ az ml compute create -f cloud/azure/compute_cpu.yml
 az ml job create -f cloud/azure/job_triage.yml   # or: python cloud/azure/submit.py --submit
 python cloud/azure/submit.py --decide <JOB> --owner "<Name>" --decision approved --reason "gate met"
 python cloud/azure/submit.py --deploy <JOB>
-python cloud/azure/call_endpoint.py "witness declares she saw a person near the harbour"
+python cloud/azure/call_endpoint.py "worker remembers she saw a person near the hall"
 az ml online-endpoint delete -n document-triage --yes
 az ml compute delete -n cpu-cluster --yes
 ```

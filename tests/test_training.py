@@ -62,7 +62,7 @@ def test_vectoriser_learns_vocabulary_from_training_documents_only():
 def test_fitted_classifier_returns_a_known_type():
     parts = small_split()
     model = ml01.build_pipeline().fit(*ml01.xy(parts["train"]))
-    assert model.predict(["witness saw a person in the evening"])[0] in common.DOC_TYPES
+    assert model.predict(["worker saw a person in the evening"])[0] in common.DOC_TYPES
 
 
 def test_empty_training_is_rejected():
@@ -140,7 +140,7 @@ def test_service_serves_the_approved_version_and_rolls_back(registry, tmp_path):
     from fastapi.testclient import TestClient
     api = TestClient(serving.create_app(approvals=tmp_path, store=store))
     assert api.get("/health").json()["version"] == "3"
-    answer = api.post("/classify", json={"text": "witness saw a person in the evening"}).json()
+    answer = api.post("/classify", json={"text": "worker saw a person in the evening"}).json()
     assert answer["label"] in common.DOC_TYPES and answer["model_version"] == "3"
     assert str(client.get_model_version_by_alias(serving.MODEL_NAME, release.ALIAS).version) == "3"
     withdrawn, live = release.rollback(client, OWNER, "test", tmp_path)

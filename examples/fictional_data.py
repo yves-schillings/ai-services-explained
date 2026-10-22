@@ -22,24 +22,24 @@ RESULTS = ROOT / "results"
 # ---------------------------------------------------------------------------
 # Fictional case documents for text classification and clustering
 # ---------------------------------------------------------------------------
-DOC_TYPES = ["witness_statement", "incident_report", "evidence_inventory", "correspondence"]
+DOC_TYPES = ["meeting_minutes", "incident_report", "item_inventory", "correspondence"]
 
 # Typical words of each document type. Several words are shared between types,
 # so the task is not trivially separable.
 TYPE_WORDS = {
-    "witness_statement": ["witness", "saw", "heard", "statement", "declares", "remembers", "noticed",
-                          "describes", "around", "person", "evening", "asked", "answered", "signed"],
-    "incident_report": ["officer", "patrol", "attended", "incident", "scene", "reported", "damage",
+    "meeting_minutes": ["worker", "saw", "heard", "speaker", "decides", "remembers", "noticed",
+                        "describes", "around", "person", "evening", "asked", "answered", "signed"],
+    "incident_report": ["operator", "parking", "attended", "incident", "scaffold", "reported", "damage",
                         "response", "arrived", "unit", "time", "location", "observed", "signed"],
-    "evidence_inventory": ["item", "exhibit", "sealed", "bag", "photograph", "recording", "inventory",
-                           "custody", "reference", "label", "stored", "collected", "number", "location"],
+    "item_inventory": ["item", "extinguisher", "shelved", "bag", "photograph", "recording", "inventory",
+                       "cupboard", "reference", "label", "stored", "collected", "number", "location"],
     "correspondence": ["dear", "colleague", "regards", "meeting", "please", "reply", "letter",
                        "request", "appointment", "thanks", "email", "schedule", "asked", "time"],
 }
 COMMON_WORDS = ["the", "and", "with", "near", "file", "case", "page", "date", "street", "report",
                 "copy", "note", "team", "office", "document", "review"]
 # Case-specific words: invented place and object names that recur inside one case.
-CASE_WORDS = ["harbour", "bluevan", "mill", "orchard", "tunnel", "kiosk", "bridge", "garage", "depot",
+CASE_WORDS = ["hall", "bluevan", "mill", "orchard", "tunnel", "kiosk", "bridge", "garage", "depot",
               "quarry", "station", "market", "chapel", "canal", "silo", "ferry", "arcade", "pier",
               "foundry", "warehouse", "terrace", "viaduct", "granary", "lighthouse"]
 
@@ -52,7 +52,7 @@ def make_case_documents(n_cases=200, seed=7, prefix="case"):
 
     Each case comes mostly from one source, so most of its documents share a type
     and the case's own place words. A random split therefore leaks case words
-    between training and test data. A split by case does not.
+    between training and test data. A split by case closes this route.
     """
     rng = random.Random(seed)
     docs = []
