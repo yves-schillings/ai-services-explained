@@ -5,7 +5,7 @@
   "final_test": {
     "cases": 100,
     "documents": 684,
-    "version": "96e784832e06ef78"
+    "version": "0d0103f79ca3ac77"
   },
   "runs": {
     "100": {
@@ -42,7 +42,7 @@
         {
           "C": 1.0,
           "class_weight": "none",
-          "train_macro_f1": 0.9745059107766403,
+          "train_macro_f1": 0.9745059107766402,
           "val_macro_f1": 0.5754850664922608
         },
         {
@@ -84,7 +84,7 @@
         {
           "C": 1.0,
           "class_weight": "balanced",
-          "train_macro_f1": 0.9947795196370799,
+          "train_macro_f1": 0.9947795196370801,
           "val_macro_f1": 0.5480236301148832
         },
         {
@@ -115,9 +115,9 @@
         ],
         "per_class_f1": {
           "correspondence": 0.575,
-          "evidence_inventory": 0.9024,
           "incident_report": 0.868,
-          "witness_statement": 0.9331
+          "item_inventory": 0.9024,
+          "meeting_minutes": 0.9331
         },
         "confusion_matrix": [
           [
@@ -146,9 +146,9 @@
           ]
         ],
         "labels": [
-          "witness_statement",
+          "meeting_minutes",
           "incident_report",
-          "evidence_inventory",
+          "item_inventory",
           "correspondence"
         ],
         "share_sent_to_review": 0.0629,
@@ -219,7 +219,7 @@
           }
         ]
       },
-      "run_id": "fcab7c794c8d4810b5ae6f43276e549f",
+      "run_id": "35523c2dd2f74d6b9ec2f7159af40e42",
       "registered_version": "1"
     },
     "200": {
@@ -250,7 +250,7 @@
         {
           "C": 0.3,
           "class_weight": "none",
-          "train_macro_f1": 0.815689331753144,
+          "train_macro_f1": 0.8156893317531437,
           "val_macro_f1": 0.667706345215441
         },
         {
@@ -329,9 +329,9 @@
         ],
         "per_class_f1": {
           "correspondence": 0.7347,
-          "evidence_inventory": 0.9409,
           "incident_report": 0.9221,
-          "witness_statement": 0.9536
+          "item_inventory": 0.9409,
+          "meeting_minutes": 0.9536
         },
         "confusion_matrix": [
           [
@@ -360,9 +360,9 @@
           ]
         ],
         "labels": [
-          "witness_statement",
+          "meeting_minutes",
           "incident_report",
-          "evidence_inventory",
+          "item_inventory",
           "correspondence"
         ],
         "share_sent_to_review": 0.0687,
@@ -433,7 +433,7 @@
           }
         ]
       },
-      "run_id": "b7ecde760ed84a3fb0391d0b2e33fc8e",
+      "run_id": "3d38b9af6f794abe95d6e645e0a26741",
       "registered_version": "2"
     },
     "400": {
@@ -470,7 +470,7 @@
         {
           "C": 1.0,
           "class_weight": "none",
-          "train_macro_f1": 0.985440078662481,
+          "train_macro_f1": 0.9854400786624811,
           "val_macro_f1": 0.8138672598538603
         },
         {
@@ -543,9 +543,9 @@
         ],
         "per_class_f1": {
           "correspondence": 0.8113,
-          "evidence_inventory": 0.9554,
           "incident_report": 0.9444,
-          "witness_statement": 0.9623
+          "item_inventory": 0.9554,
+          "meeting_minutes": 0.9623
         },
         "confusion_matrix": [
           [
@@ -574,9 +574,9 @@
           ]
         ],
         "labels": [
-          "witness_statement",
+          "meeting_minutes",
           "incident_report",
-          "evidence_inventory",
+          "item_inventory",
           "correspondence"
         ],
         "share_sent_to_review": 0.1769,
@@ -647,7 +647,7 @@
           }
         ]
       },
-      "run_id": "418e5f71e08e49e4b6586854b96ff816",
+      "run_id": "7c9b624a15e949fa8962400b5836c9bd",
       "registered_version": "3"
     }
   },
@@ -669,7 +669,7 @@
       "torch": "2.12.0+cpu",
       "mlflow": "3.17.2"
     },
-    "code_revision": "f40c27f"
+    "code_revision": "8140adf"
   },
   "command": "python examples/01_machine_learning.py"
 }

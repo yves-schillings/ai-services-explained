@@ -22,7 +22,7 @@
     }
   ],
   "live_version": "3",
-  "live_model_sha256": "e00a1ebda2108af9f0d2bc84bc5c1dfa908b626492c9d592f81e4792cf1ce2d7",
+  "live_model_sha256": "bf6ef8035a6f7604113bbf904c809ec8ca602663f8d1e8c3f2e23bbf09f83934",
   "rollback_drill": {
     "withdrawn": "3",
     "live_after_rollback": "2"
