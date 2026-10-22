@@ -1,0 +1,111 @@
+# One server: model server, MLflow, PostgreSQL with pgvector and the application, on one GPU machine.
+# Author: Yves Schillings. Read README.md first. Local test credentials only: change them before any real use.
+name: ai-one-server
+
+x-python: &python
+  build:
+    context: ../..
+    dockerfile: deploy/one-server/Dockerfile
+  image: ai-one-server/python:local
+  environment:
+    MLFLOW_TRACKING_URI: http://mlflow:5000
+    TRIAGE_APPROVALS_DIR: /approvals
+    MLFLOW_DISABLE_TELEMETRY: "true"
+
+services:
+  postgres:                      # metadata database for MLflow and vector index for retrieval
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-test-only}
+      MLFLOW_DB_PASSWORD: ${MLFLOW_DB_PASSWORD:-local-test-only-mlflow}
+      RAG_DB_PASSWORD: ${RAG_DB_PASSWORD:-local-test-only-rag}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    networks: [data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 20
+    deploy:
+      resources:
+        limits: {cpus: "2", memory: 2g}
+
+  mlflow:                        # tracking server and model registry; artifacts in a named volume
+    <<: *python
+    command: >
+      mlflow server --host 0.0.0.0 --port 5000 --workers 1
+      --backend-store-uri postgresql://mlflow:${MLFLOW_DB_PASSWORD:-local-test-only-mlflow}@postgres:5432/mlflow
+      --serve-artifacts --artifacts-destination /mlartifacts
+      --allowed-hosts mlflow,mlflow:5000,localhost,localhost:${MLFLOW_PORT:-5055},127.0.0.1,127.0.0.1:${MLFLOW_PORT:-5055}
+    volumes:
+      - mlflow-artifacts:/mlartifacts
+    ports: ["127.0.0.1:${MLFLOW_PORT:-5055}:5000"]
+    networks: [data, apps]
+    depends_on:
+      postgres: {condition: service_healthy}
+    deploy:
+      resources:
+        limits: {cpus: "2", memory: 3g}
+
+  ollama:                        # model server; the only container that receives the GPU
+    image: ollama/ollama:0.40.8
+    volumes:
+      - ollama-models:/root/.ollama
+    networks: [apps]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  app:                           # the application: approved triage model, plus questions answered by the LLM
+    <<: *python
+    command: uvicorn one_server_app:app --host 0.0.0.0 --port 8800 --app-dir deploy/one-server/app
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      TRIAGE_APPROVALS_DIR: /approvals
+      MLFLOW_DISABLE_TELEMETRY: "true"
+      OLLAMA_URL: http://ollama:11434
+      LLM_MODEL: ${LLM_MODEL:-qwen2.5:0.5b}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-all-minilm}
+      RAG_DATABASE_URL: postgresql://rag:${RAG_DB_PASSWORD:-local-test-only-rag}@postgres:5432/rag
+    volumes:
+      - approvals:/approvals:ro  # the service reads the decisions, it never writes them
+    ports: ["127.0.0.1:8800:8800"]
+    networks: [data, apps]
+    depends_on: [mlflow, ollama]
+    deploy:
+      resources:
+        limits: {cpus: "2", memory: 2g}
+
+  jobs:                          # one-off jobs: training and release decisions (docker compose run --rm jobs ...)
+    <<: *python
+    profiles: [jobs]
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      TRIAGE_APPROVALS_DIR: /approvals
+      MLFLOW_DISABLE_TELEMETRY: "true"
+      OMP_NUM_THREADS: "4"       # match the CPU limit: more threads than CPUs slows the numeric libraries
+      OPENBLAS_NUM_THREADS: "4"
+    volumes:
+      - approvals:/approvals     # only the release step writes the approval record
+      - job-results:/app/results
+    networks: [apps]
+    depends_on: [mlflow]
+    deploy:
+      resources:
+        limits: {cpus: "4", memory: 4g}
+
+networks:
+  data: {}                       # PostgreSQL is reachable only from MLflow and the application
+  apps: {}
+
+volumes:
+  postgres-data: {}
+  mlflow-artifacts: {}
+  ollama-models: {}
+  approvals: {}
+  job-results: {}
