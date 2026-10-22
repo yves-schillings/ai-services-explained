@@ -108,6 +108,11 @@ approved version at its next start. Saved scikit-learn models use MLflow's defau
 `skops` format, and the CNN is saved as a traced graph (`pt2`). Neither needs the
 training script to be loaded.
 
+The local example uses fictional owners and trusted release commands. Training and
+release share the jobs container. Production needs authenticated approvers, separate
+training and release identities, restricted approval-store writers and protected audit
+storage. The application's approval volume is mounted read-only in the tested stack.
+
 ## Measured results
 
 Executed on a laptop CPU with the versions in `requirements.txt`. Exact values, charts

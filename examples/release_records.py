@@ -14,7 +14,11 @@ proves integrity only against a reference that is protected on its own. In
 production that directory belongs to the release owners, and the service mounts
 it read-only.
 
-Decisions are appended, never edited. For each version the last decision counts:
+The release command adds decisions to the logical history. The local JSON file
+does not provide storage-enforced immutability or authenticate the owner field.
+The training and release commands share a trusted jobs container in this example.
+Production needs separate identities, restricted writers and protected audit storage.
+For each version the last decision counts:
   approved   the version may go live,
   denied     the owner or the gate refused it,
   pending    it waits for a decision,
@@ -47,7 +51,7 @@ def read_record(model_name, directory=None):
 
 
 def append_decision(model_name, entry, acceptance, directory=None):
-    """Add one decision. Called by the release step only."""
+    """Add one decision for the release command. Deployment permissions must restrict writers."""
     if entry["decision"] not in DECISIONS:
         raise ValueError(f"Unknown decision: {entry['decision']}")
     path = record_path(model_name, directory)
