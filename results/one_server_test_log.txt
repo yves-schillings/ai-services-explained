@@ -1,0 +1,340 @@
+One-server stack test (terminal control characters removed), 2026-10-22T00:00:40Z
+
+### Versions
+$ bash -c docker version --format 'Docker {{.Server.Version}}'; docker compose version;   nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
+Docker 29.8.2
+Docker Compose version v5.5.1
+NVIDIA GeForce RTX 2080 Ti, 11264 MiB, 617.14
+(exit 0, 1.2 s)
+
+### Build the image (examples and application code)
+$ docker compose build
+#9 CACHED
+
+#10 [app 6/7] COPY deploy/one-server/app deploy/one-server/app
+#10 CACHED
+
+#11 [app 4/7] RUN pip install --no-cache-dir -r deploy/one-server/requirements.txt
+#11 CACHED
+
+#12 [app 7/7] RUN useradd --uid 10001 --create-home runner     && mkdir -p /app/results /approvals /mlartifacts     && chown -R runner /app/results /approvals /mlartifacts
+#12 CACHED
+
+#13 [mlflow] exporting to image
+#13 exporting layers
+#13 exporting layers done
+#13 exporting manifest sha256:044e358be6d5d561a2bedfab864d6670553c3e08d2de9b9403b7474d587743f7 0.0s done
+#13 exporting config sha256:605a73b881426568292aff77162900575f0b26223f3eb31d3f99a88fbb109869 0.0s done
+#13 exporting attestation manifest sha256:b1dc03a02fe56f003e415d931dddaa34eb4f34aeae5e62d12e821316f303f644
+#13 exporting attestation manifest sha256:b1dc03a02fe56f003e415d931dddaa34eb4f34aeae5e62d12e821316f303f644 0.1s done
+#13 exporting manifest list sha256:48adcf9d77b494489a9d8724b6a6c50187514d01ac0f8aafdc266d060652279f 0.1s done
+#13 naming to docker.io/ai-one-server/python:local done
+#13 unpacking to docker.io/ai-one-server/python:local 0.0s done
+#13 DONE 0.3s
+
+#14 [app] exporting to image
+#14 exporting layers done
+#14 exporting manifest sha256:08cd327f85e692fa62ebb50d02d8eb4c3e262eb1715c8180f9caf19f96dcfe9c done
+#14 exporting config sha256:302866bd6f59593dee548ac87e82285edd28c61d756fffc10ea5f62521493016 done
+#14 exporting attestation manifest sha256:85e213806340b6a9fd8127e86391fce7d784a45101daf6aa919432efbc84cf9f 0.1s done
+#14 exporting manifest list sha256:07055a95e358860480ef48d1ca3d9c79e2ff2e009d2b0e115c3658df533d95a9 0.0s done
+#14 naming to docker.io/ai-one-server/python:local 0.0s done
+#14 unpacking to docker.io/ai-one-server/python:local 0.0s done
+#14 DONE 0.2s
+
+#15 [app] resolving provenance for metadata file
+#15 DONE 0.0s
+
+#16 [mlflow] resolving provenance for metadata file
+#16 DONE 0.0s
+ Image ai-one-server/python:local Built 
+ Image ai-one-server/python:local Built 
+(exit 0, 2.8 s)
+
+### Clean start: remove the test data volumes, keep the model volume
+$ bash -c docker compose --profile jobs down --remove-orphans; docker volume rm ai-one-server_postgres-data ai-one-server_mlflow-artifacts    ai-one-server_approvals ai-one-server_job-results 2>&1 | sed 's/^/removed or absent: /'
+removed or absent: ai-one-server_postgres-data
+removed or absent: ai-one-server_mlflow-artifacts
+removed or absent: ai-one-server_approvals
+removed or absent: ai-one-server_job-results
+(exit 0, 1.2 s)
+
+### Start PostgreSQL, MLflow and the model server
+$ docker compose up -d postgres mlflow ollama
+ Network ai-one-server_data Creating 
+ Network ai-one-server_data Creating 
+ Volume ai-one-server_postgres-data Creating 
+ Volume ai-one-server_mlflow-artifacts Creating 
+ Volume ai-one-server_mlflow-artifacts Creating 
+ Volume ai-one-server_postgres-data Creating 
+ Network ai-one-server_apps Creating 
+ Network ai-one-server_apps Creating 
+ Volume ai-one-server_mlflow-artifacts Created 
+ Volume ai-one-server_mlflow-artifacts Created 
+ Volume ai-one-server_postgres-data Created 
+ Volume ai-one-server_postgres-data Created 
+ Network ai-one-server_data Created 
+ Network ai-one-server_data Created 
+ Container ai-one-server-postgres-1 Creating 
+ Network ai-one-server_apps Created 
+ Network ai-one-server_apps Created 
+ Container ai-one-server-ollama-1 Creating 
+ Container ai-one-server-postgres-1 Created 
+ Container ai-one-server-mlflow-1 Creating 
+ Container ai-one-server-ollama-1 Created 
+ Container ai-one-server-mlflow-1 Created 
+ Container ai-one-server-postgres-1 Starting 
+ Container ai-one-server-ollama-1 Starting 
+ Container ai-one-server-postgres-1 Started 
+ Container ai-one-server-postgres-1 Waiting 
+ Container ai-one-server-ollama-1 Started 
+ Container ai-one-server-postgres-1 Healthy 
+ Container ai-one-server-mlflow-1 Starting 
+ Container ai-one-server-mlflow-1 Started 
+(exit 0, 7.9 s)
+
+### Wait for the MLflow tracking server
+$ wait_for http://127.0.0.1:5055/health 120
+(exit 0, 12.6 s)
+
+### The GPU is assigned to the model-server container only
+$ bash -c docker compose exec -T ollama nvidia-smi --query-gpu=name,memory.total --format=csv,noheader;    docker compose run --rm --no-deps -T jobs sh -c 'ls /dev/nvidia* 2>/dev/null || echo no GPU device in the jobs container'
+NVIDIA GeForce RTX 2080 Ti, 11264 MiB
+ Volume ai-one-server_job-results Creating 
+ Volume ai-one-server_job-results Creating 
+ Volume ai-one-server_approvals Creating 
+ Volume ai-one-server_approvals Creating 
+ Volume ai-one-server_job-results Created 
+ Volume ai-one-server_job-results Created 
+ Volume ai-one-server_approvals Created 
+ Volume ai-one-server_approvals Created 
+ Container ai-one-server-jobs-run-5a972aeb560a Creating 
+ Container ai-one-server-jobs-run-5a972aeb560a Created 
+no GPU device in the jobs container
+(exit 0, 3.0 s)
+
+### Pull a small LLM (qwen2.5:0.5b, Apache 2.0) into the model volume
+$ docker compose exec -T ollama ollama pull qwen2.5:0.5b
+pulling manifest
+pulling c5396e06af29: 100% ▕██████████████████▏ 397 MB                         
+pulling 66b9ea09bd5b: 100% ▕██████████████████▏   68 B                         
+pulling eb4402837c78: 100% ▕██████████████████▏ 1.5 KB                         
+pulling 832dd9e00a68: 100% ▕██████████████████▏  11 KB                         
+pulling 005f95c74751: 100% ▕██████████████████▏  490 B                         
+verifying sha256 digest 
+writing manifest 
+removing unused layers 
+success 
+(exit 0, 2.1 s)
+
+### Pull a small embedding model (all-minilm, Apache 2.0)
+$ docker compose exec -T ollama ollama pull all-minilm
+pulling manifest
+pulling 797b70c4edf8: 100% ▕██████████████████▏  45 MB                         
+pulling c71d239df917: 100% ▕██████████████████▏  11 KB                         
+pulling 85011998c600: 100% ▕██████████████████▏   16 B                         
+pulling 548455b72658: 100% ▕██████████████████▏  407 B                         
+verifying sha256 digest 
+writing manifest 
+removing unused layers 
+success 
+(exit 0, 1.9 s)
+
+### Models in the volume
+$ docker compose exec -T ollama ollama list
+NAME                 ID              SIZE      MODIFIED      
+all-minilm:latest    1b226e2802db    45 MB     1 second ago     
+qwen2.5:0.5b         a8b0c5157701    397 MB    3 seconds ago    
+(exit 0, 1.1 s)
+
+### The application refuses to start without an approved version
+$ bash -c docker compose up -d app; sleep 25; docker compose ps -a app --format '{{.Name}} {{.State}} {{.Status}}';    docker compose logs app | grep -E 'RefusedModel|No approved' | tail -2
+ Container ai-one-server-mlflow-1 Running 
+ Container ai-one-server-ollama-1 Running 
+ Container ai-one-server-postgres-1 Running 
+ Container ai-one-server-app-1 Creating 
+ Container ai-one-server-app-1 Created 
+ Container ai-one-server-postgres-1 Waiting 
+ Container ai-one-server-postgres-1 Healthy 
+ Container ai-one-server-app-1 Starting 
+ Container ai-one-server-app-1 Started 
+ai-one-server-app-1 exited Exited (1) 23 seconds ago
+app-1  |     raise RefusedModel(f"No approved version of {model_name}. Pending, denied and withdrawn versions "
+app-1  | model_serving.RefusedModel: No approved version of document-triage. Pending, denied and withdrawn versions are never served.
+(exit 0, 28.9 s)
+
+### Training job: three runs logged to MLflow, three versions registered
+$ docker compose run --rm -T jobs python examples/01_machine_learning.py
+
+Successfully registered model 'document-triage'.
+Created version '1' of model 'document-triage'.
+🏃 View run pool-100-cases at: http://mlflow:5000/#/experiments/1/runs/de4f84b8d1854159824f65e3e6495b66
+🧪 View experiment at: http://mlflow:5000/#/experiments/1
+--- pool of 100 labelled cases (660 documents)
+3. Split by case: {'train': 527, 'val': 133, 'final_test': 684} - cases shared with the final test set: 0
+4-5. Hyperparameters chosen on validation: {'C': 30.0, 'class_weight': 'balanced', 'train_macro_f1': 1.0, 'val_macro_f1': 0.6581196581196581}
+   Learned parameters: {'vocabulary_terms': 2569, 'logistic_coefficients': 10280}
+6. Final test, used once: {'accuracy': 0.8874, 'macro_f1': 0.8196, 'macro_f1_interval_95': [0.7573, 0.8695], 'share_sent_to_review': 0.0629, 'accuracy_on_kept': 0.908, 'passes_acceptance': False}
+   Baselines on the same test set (macro-F1): {'most_frequent_type': 0.0929, 'keyword_rule': 0.658}
+7. Leakage check inside the pool, test macro-F1: {'split_by_case': 0.6107, 'random_split': 0.9086, 'vectoriser_fitted_on_all_data': 0.6235}
+8. MLflow run de4f84b8 registered as version 1 of document-triage - gate failed
+Registered model 'document-triage' already exists. Creating a new version of this model...
+Created version '2' of model 'document-triage'.
+🏃 View run pool-200-cases at: http://mlflow:5000/#/experiments/1/runs/9d348aeec78c416ab370a78514700081
+🧪 View experiment at: http://mlflow:5000/#/experiments/1
+--- pool of 200 labelled cases (1324 documents)
+3. Split by case: {'train': 1051, 'val': 273, 'final_test': 684} - cases shared with the final test set: 0
+4-5. Hyperparameters chosen on validation: {'C': 10.0, 'class_weight': 'balanced', 'train_macro_f1': 1.0, 'val_macro_f1': 0.9198112246365202}
+   Learned parameters: {'vocabulary_terms': 4499, 'logistic_coefficients': 18000}
+6. Final test, used once: {'accuracy': 0.9269, 'macro_f1': 0.8878, 'macro_f1_interval_95': [0.8401, 0.9263], 'share_sent_to_review': 0.0687, 'accuracy_on_kept': 0.9576, 'passes_acceptance': True}
+   Baselines on the same test set (macro-F1): {'most_frequent_type': 0.1456, 'keyword_rule': 0.672}
+7. Leakage check inside the pool, test macro-F1: {'split_by_case': 0.848, 'random_split': 0.9302, 'vectoriser_fitted_on_all_data': 0.8637}
+8. MLflow run 9d348aee registered as version 2 of document-triage - gate passed
+Registered model 'document-triage' already exists. Creating a new version of this model...
+Created version '3' of model 'document-triage'.
+🏃 View run pool-400-cases at: http://mlflow:5000/#/experiments/1/runs/31d1a47685c545479b8596360a287d96
+🧪 View experiment at: http://mlflow:5000/#/experiments/1
+--- pool of 400 labelled cases (2588 documents)
+3. Split by case: {'train': 2044, 'val': 544, 'final_test': 684} - cases shared with the final test set: 0
+4-5. Hyperparameters chosen on validation: {'C': 1.0, 'class_weight': 'balanced', 'train_macro_f1': 0.9967120211594456, 'val_macro_f1': 0.9197838903882989}
+   Learned parameters: {'vocabulary_terms': 6174, 'logistic_coefficients': 24700}
+6. Final test, used once: {'accuracy': 0.9444, 'macro_f1': 0.9184, 'macro_f1_interval_95': [0.8824, 0.9436], 'share_sent_to_review': 0.1769, 'accuracy_on_kept': 0.9858, 'passes_acceptance': True}
+   Baselines on the same test set (macro-F1): {'most_frequent_type': 0.0929, 'keyword_rule': 0.658}
+7. Leakage check inside the pool, test macro-F1: {'split_by_case': 0.895, 'random_split': 0.9422, 'vectoriser_fitted_on_all_data': 0.895}
+8. MLflow run 31d1a476 registered as version 3 of document-triage - gate passed
+   Review cost with the largest pool (minutes per 1.000 documents): {0.3: 1111.1, 0.4: 994.2, 0.5: 587.7, 0.6: 754.4, 0.7: 1093.6, 0.8: 1640.4, 0.9: 1982.5} - everything by hand: 2000.0
+9. Inference from the registered version: [{'label': 'witness_statement', 'confidence': 0.8928, 'requires_review': False}]
+10. Monitoring after deployment: {'mean_confidence_test': 0.6574, 'mean_confidence_new_batch': 0.527, 'review_share_test': 0.1769, 'review_share_new_batch': 0.525, 'investigate': True}
+(exit 0, 39.9 s)
+
+### Release job: the gate and the named owner decide
+$ docker compose run --rm -T jobs python examples/19_model_release.py
+ Container ai-one-server-mlflow-1 Running 
+ Container ai-one-server-postgres-1 Running 
+ Container ai-one-server-postgres-1 Waiting 
+ Container ai-one-server-postgres-1 Healthy 
+ Container ai-one-server-jobs-run-08e6d7062501 Creating 
+ Container ai-one-server-jobs-run-08e6d7062501 Created 
+   Validation code: Version 1: test_macro_f1 0.8196 is below the gate 0.85. It cannot be approved.
+Version 1 (100 cases): denied
+Version 2 (200 cases): approved
+Version 3 (400 cases): approved
+Live version: 3 - MLflow alias live -> 3
+Rollback drill: version 3 withdrawn, version 2 becomes live.
+(exit 0, 5.4 s)
+
+### Start the application again
+$ bash -c docker compose up -d --force-recreate app
+ Container ai-one-server-ollama-1 Running 
+ Container ai-one-server-postgres-1 Running 
+ Container ai-one-server-mlflow-1 Running 
+ Container ai-one-server-app-1 Recreate 
+ Container ai-one-server-app-1 Recreated 
+ Container ai-one-server-postgres-1 Waiting 
+ Container ai-one-server-postgres-1 Healthy 
+ Container ai-one-server-app-1 Starting 
+ Container ai-one-server-app-1 Started 
+(exit 0, 2.4 s)
+
+### Wait for the application
+$ wait_for http://127.0.0.1:8800/health 180
+(exit 0, 39.6 s)
+
+### Health: the approved version is served
+$ json http://127.0.0.1:8800/health
+{"model":"document-triage","version":"3","approved_by":"document intake service owner (fictional)","approved_utc":"2026-10-22T00:02:31Z","model_sha256":"3cb5b1a07be28b67"}
+(exit 0, 0.1 s)
+
+### Classify a document
+$ json -X POST http://127.0.0.1:8800/classify -H Content-Type: application/json -d {"text": "witness saw a person near the harbour in the evening"}
+{"label":"witness_statement","confidence":0.8928,"requires_review":false,"model_version":"3"}
+(exit 0, 0.1 s)
+
+### Warm-up: load the LLM into GPU memory (the first call also prepares the GPU kernels)
+$ docker compose exec -T ollama ollama run qwen2.5:0.5b Reply with OK.
+OK.
+
+(exit 0, 139.1 s)
+
+### Ask a question: pgvector retrieval, then the LLM on the GPU
+$ json -X POST http://127.0.0.1:8800/ask -H Content-Type: application/json -d {"question": "What happens when the type is proposed with low confidence?"}
+{"answer":"When the type is proposed with low confidence, it goes to a reviewer before routing.","passages":["P1","P6"],"model":"qwen2.5:0.5b","generated_tokens":18,"tokens_per_second":152.1}
+(exit 0, 3.9 s)
+
+### Ask a second question
+$ json -X POST http://127.0.0.1:8800/ask -H Content-Type: application/json -d {"question": "How do we go back to the previous model version?"}
+{"answer":"We go back to the previous model version.","passages":["P4","P6"],"model":"qwen2.5:0.5b","generated_tokens":10,"tokens_per_second":149.0}
+(exit 0, 0.3 s)
+
+### Where the LLM runs (size_vram > 0 means GPU memory)
+$ json http://127.0.0.1:8800/models
+{"models":[{"name":"all-minilm:latest","model":"all-minilm:latest","size":27137146,"digest":"1b226e2802dbb772b5fc32a58f103ca1804ef7501331012de126ab22f67475ef","details":{"parent_model":"","format":"gguf","family":"bert","families":["bert"],"parameter_size":"23M","quantization_level":"F16"},"expires_at":"2026-10-22T00:10:40.44434025Z","size_vram":27137146,"context_length":256,"runner":"llamacpp"},{"name":"qwen2.5:0.5b","model":"qwen2.5:0.5b","size":483645193,"digest":"a8b0c51577010a279d933d14c2a8ab4b268079d44c5c8830c0a93900f1827c67","details":{"parent_model":"","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"494.03M","quantization_level":"Q4_K_M"},"expires_at":"2026-10-22T00:10:40.575027076Z","size_vram":483645193,"context_length":4096,"runner":"llamacpp"}]}
+(exit 0, 0.1 s)
+
+### Rollback: the owner withdraws the live version
+$ docker compose run --rm -T jobs python examples/19_model_release.py --rollback Rollback test of the one-server stack
+ Container ai-one-server-postgres-1 Running 
+ Container ai-one-server-mlflow-1 Running 
+ Container ai-one-server-postgres-1 Waiting 
+ Container ai-one-server-postgres-1 Healthy 
+ Container ai-one-server-jobs-run-fa2a9d9f6c54 Creating 
+ Container ai-one-server-jobs-run-fa2a9d9f6c54 Created 
+Version 3 withdrawn. Live version: 2.
+(exit 0, 4.8 s)
+
+### Restart the application
+$ bash -c docker compose restart app
+ Container ai-one-server-app-1 Restarting 
+ Container ai-one-server-app-1 Started 
+(exit 0, 3.0 s)
+
+### Wait for the application
+$ wait_for http://127.0.0.1:8800/health 180
+(exit 0, 4.7 s)
+
+### Health after rollback: the previous approved version is served
+$ json http://127.0.0.1:8800/health
+{"model":"document-triage","version":"2","approved_by":"document intake service owner (fictional)","approved_utc":"2026-10-22T00:02:31Z","model_sha256":"3d13f3b60fa0769c"}
+(exit 0, 0.1 s)
+
+### Separation that must be configured: the model server cannot reach PostgreSQL
+$ docker compose exec -T ollama sh -c getent hosts postgres || echo 'postgres is not reachable from the model-server network'
+postgres is not reachable from the model-server network
+(exit 0, 4.8 s)
+
+### Separation that must be configured: the retrieval user cannot open the MLflow database
+$ docker compose exec -T postgres psql -U rag -d mlflow -c select 1
+psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  permission denied for database "mlflow"
+DETAIL:  User does not have CONNECT privilege.
+(exit 2, 0.6 s)
+
+### Stop the stack (volumes kept: models, metadata, artifacts, approvals)
+$ docker compose down
+ Container ai-one-server-app-1 Stopping 
+ Container ai-one-server-app-1 Stopped 
+ Container ai-one-server-app-1 Removing 
+ Container ai-one-server-app-1 Removed 
+ Container ai-one-server-mlflow-1 Stopping 
+ Container ai-one-server-ollama-1 Stopping 
+ Container ai-one-server-ollama-1 Stopped 
+ Container ai-one-server-ollama-1 Removing 
+ Container ai-one-server-ollama-1 Removed 
+ Container ai-one-server-mlflow-1 Stopped 
+ Container ai-one-server-mlflow-1 Removing 
+ Container ai-one-server-mlflow-1 Removed 
+ Container ai-one-server-postgres-1 Stopping 
+ Container ai-one-server-postgres-1 Stopped 
+ Container ai-one-server-postgres-1 Removing 
+ Container ai-one-server-postgres-1 Removed 
+ Network ai-one-server_apps Removing 
+ Network ai-one-server_data Removing 
+ Network ai-one-server_apps Removed 
+ Network ai-one-server_data Removed 
+(exit 0, 6.7 s)
+
+### No container of the stack is running
+$ bash -c docker ps --filter name=ai-one-server --format '{{.Names}}' | wc -l
+0
+(exit 0, 0.5 s)
+
+End of test.
