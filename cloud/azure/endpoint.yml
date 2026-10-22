@@ -1,0 +1,8 @@
+# Managed online endpoint that the application calls (step 7). STATUS: prepared, not created.
+# Author: Yves Schillings.
+# aad_token: callers authenticate with Microsoft Entra ID instead of a shared key.
+#   az ml online-endpoint create -f cloud/azure/endpoint.yml
+$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineEndpoint.schema.json
+name: document-triage
+auth_mode: aad_token
+description: Proposes a document type. Only an approved model version is deployed here.

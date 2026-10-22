@@ -1,0 +1,14 @@
+# CPU compute cluster for the training jobs. STATUS: prepared, not created.
+# Author: Yves Schillings.
+#   az ml compute create -f cloud/azure/compute_cpu.yml
+# min_instances 0: after the idle timeout, nodes are deallocated, avoiding idle VM
+# compute charges. Storage and other provisioned resources can still incur charges.
+# Delete the unused cluster at the end of the walkthrough as resource housekeeping:
+#   az ml compute delete -n cpu-cluster --yes
+$schema: https://azuremlschemas.azureedge.net/latest/amlCompute.schema.json
+name: cpu-cluster
+type: amlcompute
+size: Standard_DS3_v2
+min_instances: 0
+max_instances: 1
+idle_time_before_scale_down: 600

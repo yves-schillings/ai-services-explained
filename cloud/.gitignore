@@ -1,0 +1,5 @@
+# Recreated on demand: staged code, fictional data and local check outputs.
+build/
+data/
+outputs/
+__pycache__/

@@ -1,0 +1,13 @@
+# Packages that a SageMaker AI training job installs on top of its PyTorch image.
+# (Azure Machine Learning uses cloud/azure/environment/conda.yml instead.)
+# scikit-learn, NumPy and joblib keep the versions of the local examples, so the
+# cloud model matches the local one.
+numpy==2.4.6
+scikit-learn==1.8.0
+joblib==1.5.3
+pillow==12.2.0          # page_images.py, imported by the CNN example
+# A SageMaker AI managed MLflow tracking server needs the client version that matches
+# the server version: mlflow==3.0.0 for a 3.0.x server. The plugin signs the calls
+# with the job's IAM role and accepts the tracking server ARN as tracking URI.
+mlflow==3.0.0
+sagemaker-mlflow==0.5.0

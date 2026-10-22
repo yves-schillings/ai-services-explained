@@ -1,0 +1,19 @@
+# Deployment "blue" of the approved model version (step 7). STATUS: prepared, not created.
+# Author: Yves Schillings.
+# A managed online deployment is billed for every hour its instance runs, even without
+# requests. Delete it after the test:  az ml online-endpoint delete -n document-triage
+#
+# Replace <VERSION> with the version that the approval record names, then:
+#   az ml online-deployment create -f cloud/azure/deployment.yml --all-traffic
+$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
+name: blue
+endpoint_name: document-triage
+model: azureml:document-triage:<VERSION>
+code_configuration:
+  code: scoring
+  scoring_script: score.py
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
+  conda_file: environment/conda.yml
+instance_type: Standard_DS3_v2
+instance_count: 1

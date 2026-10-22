@@ -1,0 +1,19 @@
+# Software environment of the Azure Machine Learning jobs and of the online deployment.
+# Author: Yves Schillings.
+# Azure Machine Learning installs these packages on top of the base image named in the job.
+# scikit-learn, NumPy and joblib keep the versions of the local examples. azureml-mlflow
+# 1.62 accepts MLflow clients up to 3.15, so the job pins mlflow-skinny 3.15.0.
+name: ai-services-explained
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - numpy==2.4.6
+      - scikit-learn==1.8.0
+      - joblib==1.5.3
+      - pillow==12.2.0
+      - mlflow-skinny==3.15.0
+      - azureml-mlflow==1.62.0.post6
+      - azureml-inference-server-http
