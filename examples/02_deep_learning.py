@@ -90,11 +90,12 @@ def n_params(model, trainable=False):
 @torch.no_grad()
 def evaluate(model, x, y):
     model.eval()
-    logits = model(x)
-    loss = F.cross_entropy(logits, y).item()
+    device = next(model.parameters()).device
+    logits = model(x.to(device))
+    loss = F.cross_entropy(logits, y.to(device)).item()
     proba = F.softmax(logits, dim=1)
     conf, pred = proba.max(dim=1)
-    return loss, pred.numpy(), conf.numpy()
+    return loss, pred.cpu().numpy(), conf.cpu().numpy()
 
 
 def fit(model, train, val, epochs=30, lr=2e-3, batch=32, patience=5, seed=0):
@@ -103,6 +104,7 @@ def fit(model, train, val, epochs=30, lr=2e-3, batch=32, patience=5, seed=0):
     x, y = train
     opt = torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=lr)
     first = next(model.parameters())
+    device = first.device
     start = first.detach().clone()
     history, best, best_loss, waited = [], None, float("inf"), 0
     for epoch in range(1, epochs + 1):
@@ -111,15 +113,15 @@ def fit(model, train, val, epochs=30, lr=2e-3, batch=32, patience=5, seed=0):
         total = 0.0
         for i in range(0, len(y), batch):                 # one batch = 32 pages
             b = order[i:i + batch]
-            logits = model(x[b])                          # 1 forward pass
-            loss = F.cross_entropy(logits, y[b])          # 2 loss against the true type
+            logits = model(x[b].to(device))               # 1 forward pass on the model's device
+            loss = F.cross_entropy(logits, y[b].to(device))  # 2 loss against the true type
             opt.zero_grad()
             loss.backward()                               # 3 gradients by backpropagation
             opt.step()                                    # 4 optimiser updates the weights
             total += loss.item() * len(b)
         val_loss, val_pred, _ = evaluate(model, *val)     # validation never updates weights
         history.append({"epoch": epoch, "train_loss": round(total / len(y), 4), "val_loss": round(val_loss, 4),
-                        "val_accuracy": round(float((val_pred == val[1].numpy()).mean()), 4),
+                        "val_accuracy": round(float((val_pred == val[1].cpu().numpy()).mean()), 4),
                         "first_layer_change": round(float((first.detach() - start).norm()), 4)})
         if val_loss < best_loss - 1e-4:                   # early stopping on validation loss
             best_loss, best, waited = val_loss, copy.deepcopy(model.state_dict()), 0
@@ -133,7 +135,7 @@ def fit(model, train, val, epochs=30, lr=2e-3, batch=32, patience=5, seed=0):
 
 def test_scores(model, x, y):
     _, pred, conf = evaluate(model, x, y)
-    y = y.numpy()
+    y = y.cpu().numpy()
     keep = conf >= REVIEW_THRESHOLD
     cm = np.zeros((3, 3), dtype=int)
     for t, p in zip(y, pred):
