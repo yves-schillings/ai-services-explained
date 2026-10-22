@@ -1,0 +1,5 @@
+# Installed in the endpoint container: the versions the model was trained with.
+numpy==2.4.6
+scikit-learn==1.8.0
+joblib==1.5.3
+mlflow==3.0.0

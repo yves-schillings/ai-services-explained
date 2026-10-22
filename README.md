@@ -189,7 +189,25 @@ evaluations and model versions.
 
 ## Cloud training (prepared)
 
-<!-- Cloud training section: to be completed. -->
+`cloud/` trains the same document classifier and page network outside the laptop, with the
+same fictional data, split, metrics and gate. Everything there is **prepared, not executed**:
+the code and configuration are checked by offline tests, and no cloud resource was created.
+
+- `cloud/azure/`: an Azure Machine Learning command job, MLflow tracking in the workspace,
+  model registration, a managed online endpoint and a client call.
+- `cloud/aws/sagemaker/`: a SageMaker AI training job with the same script, managed MLflow
+  tracking, the model in S3 and a real-time endpoint.
+- `cloud/aws/bedrock/`: a Bedrock fine-tuning job for a supported foundation model, with a
+  before and after evaluation and prompt-injection tests. This path does not run your own
+  scikit-learn or PyTorch code, and no weight download is documented.
+- `cloud/README.md`: the data sent and its destination, the cost elements, what ran and what
+  is prepared, and how to get each trained model back for local hosting.
+
+```powershell
+python -m pytest cloud/tests -q
+```
+
+Running a cloud example needs an account owner, a budget and approval of the data sent.
 
 ## Verification
 

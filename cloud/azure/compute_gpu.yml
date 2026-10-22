@@ -1,0 +1,12 @@
+# GPU compute cluster for a larger network (optional). STATUS: prepared, not created.
+# Author: Yves Schillings.
+# One NVIDIA T4 (16 GB). GPU quota must be granted on the subscription first.
+#   az ml compute create -f cloud/azure/compute_gpu.yml
+# Delete it after use: az ml compute delete -n gpu-cluster --yes
+$schema: https://azuremlschemas.azureedge.net/latest/amlCompute.schema.json
+name: gpu-cluster
+type: amlcompute
+size: Standard_NC4as_T4_v3
+min_instances: 0
+max_instances: 1
+idle_time_before_scale_down: 600

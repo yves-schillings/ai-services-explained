@@ -1,0 +1,40 @@
+# Azure Machine Learning command job: train the document-triage classifier (step 4).
+# Author: Yves Schillings.
+# STATUS: prepared, not executed. Submitting it starts a billed compute cluster.
+#
+# Before submitting:
+#   python cloud/shared/prepare_data.py     steps 1 and 2: fictional data, split by case
+#   python cloud/shared/stage.py            only the training code goes into the job
+# Submit with the CLI:
+#   az ml job create -f cloud/azure/job_triage.yml
+# or with the Python SDK: python cloud/azure/submit.py --submit
+#
+# Data sent: the three JSON Lines files of fictional documents (about 2 MB) are uploaded
+# to the workspace's default storage account. The model and the logs stay in the workspace.
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+type: command
+display_name: document-triage-cloud
+experiment_name: document-triage-cloud
+description: Train the document-triage classifier of examples/01 on the fictional documents.
+code: ../build/src
+command: >-
+  python train_triage.py
+  --data ${{inputs.data}}
+  --output ${{outputs.result}}
+inputs:
+  data:
+    type: uri_folder
+    path: ../data/triage
+outputs:
+  result:
+    type: uri_folder
+    mode: upload
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04:latest
+  conda_file: environment/conda.yml
+compute: azureml:cpu-cluster
+limits:
+  timeout: 1800
+tags:
+  example: "01"
+  data: fictional

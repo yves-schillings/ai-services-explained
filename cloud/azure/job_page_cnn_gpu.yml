@@ -1,0 +1,37 @@
+# Azure Machine Learning command job: train the page-layout CNN on a GPU cluster (optional variant).
+# Author: Yves Schillings.
+# STATUS: prepared, not executed. A GPU cluster is billed by the minute while nodes run.
+#
+# The small CNN of examples/02 trains on a CPU in seconds, and train_page_cnn.py keeps the
+# CPU loop of example 02. This job shows how a larger network would request a GPU:
+# the compute cluster and the curated PyTorch environment change, the code and data stay
+# the same. Use cpu-cluster for this exact network.
+#
+#   python cloud/shared/prepare_data.py && python cloud/shared/stage.py
+#   az ml job create -f cloud/azure/job_page_cnn_gpu.yml
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+type: command
+display_name: page-layout-cnn-gpu
+experiment_name: page-layout-cloud
+description: Train the page-layout CNN of examples/02 on synthetic page images.
+code: ../build/src
+command: >-
+  pip install mlflow-skinny==3.15.0 azureml-mlflow==1.62.0.post6 pillow==12.2.0 &&
+  python train_page_cnn.py
+  --data ${{inputs.data}}
+  --output ${{outputs.result}}
+inputs:
+  data:
+    type: uri_folder
+    path: ../data/pages
+outputs:
+  result:
+    type: uri_folder
+    mode: upload
+environment: azureml:AzureML-acpt-pytorch-2.8-cuda12.6@latest
+compute: azureml:gpu-cluster
+limits:
+  timeout: 3600
+tags:
+  example: "02"
+  data: synthetic

@@ -1,0 +1,13 @@
+# CPU compute cluster for the training jobs. STATUS: prepared, not created.
+# Author: Yves Schillings.
+#   az ml compute create -f cloud/azure/compute_cpu.yml
+# min_instances 0: no node runs between jobs. Microsoft's training guide still says that a
+# cluster keeps billing while it exists, so delete it when the walkthrough is over:
+#   az ml compute delete -n cpu-cluster --yes
+$schema: https://azuremlschemas.azureedge.net/latest/amlCompute.schema.json
+name: cpu-cluster
+type: amlcompute
+size: Standard_DS3_v2
+min_instances: 0
+max_instances: 1
+idle_time_before_scale_down: 600
