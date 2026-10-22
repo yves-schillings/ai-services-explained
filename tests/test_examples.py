@@ -1,5 +1,5 @@
 """Deterministic control tests of the service examples 03 to 12.
-No model server or external service is contacted. The training examples 01, 02 and 13 to 18
+No model server or external service is contacted. The training examples 01, 02 and 13 to 19
 are tested in test_training.py."""
 from pathlib import Path
 import importlib.util

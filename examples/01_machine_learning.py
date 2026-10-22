@@ -1,37 +1,64 @@
-"""Train, evaluate, package and monitor a document-triage classifier.
+"""Train, evaluate, register and monitor a document-triage classifier.
 
 Author: Yves Schillings.
 
 Run:  python examples/01_machine_learning.py
+Then: python examples/19_model_release.py    (the gate and a named owner decide)
+      python examples/18_model_serving.py    (serves the approved version)
 
 The model proposes the type of each incoming document so that it reaches the
 right reviewer. It is a scikit-learn Pipeline with two fitted steps:
   * TfidfVectorizer learns the vocabulary and one IDF weight per word,
   * LogisticRegression learns one coefficient per word and document type.
 Only the training set changes those learned values. The validation set chooses
-the hyperparameters. The test set is used once, at the end.
+the hyperparameters. The final test set is used once per scenario, at the end.
 
-All data is fictional (see training/common.py). The scores show the mechanism,
-not production quality.
+Data (all fictional, see fictional_data.py):
+  * three labelled pools of 100, 200 and 400 cases, each pool containing the
+    previous one. Each pool is split by case: 80 % training, 20 % validation;
+  * ONE fixed final test set of 100 other cases, generated separately. It is
+    never used for training or tuning, so every scenario is judged on exactly
+    the same documents.
+
+Two baselines show what the model must beat: always proposing the most frequent
+type, and a keyword rule a person could write without any training.
+
+MLflow records each scenario as a run (parameters, data version, metrics,
+curves, the saved model and its exact dependencies) and registers the model as
+a new version of "document-triage". MLflow keeps the information. It does not
+approve anything: that is the release step (19_model_release.py).
 """
 import json
 from collections import Counter
 
-import joblib
+import mlflow
+import mlflow.sklearn
 import numpy as np
+from sklearn.dummy import DummyClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
 from sklearn.pipeline import Pipeline
 
-from fictional_data import (ARTIFACTS, DOC_TYPES, RESULTS, make_case_documents, save_json, sha256_file,
-                             sha256_json, split_at_random, split_by_group, write_manifest)
+from fictional_data import (DOC_TYPES, FINAL_TEST_CASES, RESULTS, make_case_documents, make_final_test_set,
+                             run_environment, save_json, sha256_json, split_at_random, split_by_group)
+from mlflow_tracking import pinned, use_experiment
 
 ACCEPTANCE_MACRO_F1 = 0.85     # agreed with the business owner before training
 REVIEW_THRESHOLD = 0.50        # below this confidence a person types the document
 GRID_C = [0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0]
-ARTIFACT = ARTIFACTS / "document_triage.joblib"
-MANIFEST = ARTIFACTS / "document_triage.manifest.json"
+POOLS = (100, 200, 400)        # labelled cases; each pool contains the previous one
+MODEL_NAME = "document-triage"
+EXPERIMENT = "document-triage"
+# Fictional cost assumptions, to agree with the owner: a person checks and routes one document
+# in 2 minutes; a misrouted document that nobody checked costs 20 minutes when it is found later.
+REVIEW_MINUTES = 2.0
+ERROR_MINUTES = 20.0
+# A rule a person could write from the typical words of each type, without any training.
+KEYWORDS = {"witness_statement": ["witness", "statement", "declares"],
+            "incident_report": ["officer", "patrol", "incident"],
+            "evidence_inventory": ["exhibit", "sealed", "inventory"],
+            "correspondence": ["dear", "regards", "letter"]}
 
 
 def build_pipeline(c=1.0, class_weight=None):
@@ -73,7 +100,8 @@ def predict_with_review(model, texts, threshold=REVIEW_THRESHOLD):
 
 
 def leakage_experiment(docs, best):
-    """Same pipeline, two ways of splitting. The random split lets case words leak into the test set."""
+    """Inside one pool, the same pipeline with two ways of splitting it into train, validation and test.
+    The random split lets case words leak into its test part. The fixed final test set is not used here."""
     out = {}
     cw = None if best["class_weight"] == "none" else best["class_weight"]
     for name, parts in (("split_by_case", split_by_group(docs, "case_id")),
@@ -105,18 +133,74 @@ def drifted_batch(seed=99, n=200):
     return docs
 
 
-def train_and_evaluate(docs):
-    """Steps 3 to 7 for one dataset: split by case, tune on validation, test once, check leakage."""
-    parts = split_by_group(docs, "case_id")                         # no case in two sets
-    sizes = {k: len(v) for k, v in parts.items()}
-    shared = {r["case_id"] for r in parts["train"]} & {r["case_id"] for r in parts["test"]}
+def keyword_rule(text, default):
+    """The type whose keywords appear most often in the text, or the default type."""
+    words = set(text.split())
+    hits = {t: len(words & set(k)) for t, k in KEYWORDS.items()}
+    best = max(hits, key=hits.get)
+    return best if hits[best] else default
+
+
+def baselines(train, final_test):
+    """What the model must beat, scored on the same final test set."""
+    x, y = xy(train)
+    x_test, y_test = xy(final_test)
+    dummy = DummyClassifier(strategy="most_frequent").fit(x, y)
+    default = str(dummy.predict(["any"])[0])
+    rule = [keyword_rule(t, default) for t in x_test]
+    return {"most_frequent_type": round(f1_score(y_test, dummy.predict(x_test), average="macro",
+                                                 zero_division=0), 4),
+            "keyword_rule": round(f1_score(y_test, rule, average="macro", zero_division=0), 4)}
+
+
+def macro_f1_interval(y_true, y_pred, cases, n=1000, seed=5):
+    """95 % interval of the test macro-F1. Whole cases are resampled, because documents of one case are alike."""
+    rng = np.random.default_rng(seed)
+    groups = {}
+    for i, c in enumerate(cases):
+        groups.setdefault(c, []).append(i)
+    groups = list(groups.values())
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+    scores = []
+    for _ in range(n):
+        idx = np.concatenate([groups[k] for k in rng.integers(0, len(groups), len(groups))])
+        scores.append(f1_score(y_true[idx], y_pred[idx], average="macro", zero_division=0))
+    return [round(float(np.percentile(scores, 2.5)), 4), round(float(np.percentile(scores, 97.5)), 4)]
+
+
+def review_cost(model, x, y, thresholds=(0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)):
+    """Minutes per 1.000 documents: people check the uncertain ones, errors among the others cost later."""
+    proba = model.predict_proba(x)
+    labels = model.classes_[proba.argmax(axis=1)]
+    conf = proba.max(axis=1)
+    wrong = labels != np.array(y)
+    rows = []
+    for t in thresholds:
+        review = conf < t
+        errors = int((wrong & ~review).sum())
+        minutes = REVIEW_MINUTES * review.sum() + ERROR_MINUTES * errors
+        rows.append({"threshold": t, "share_sent_to_review": round(float(review.mean()), 4),
+                     "errors_not_reviewed": errors, "minutes_per_1000": round(float(minutes) / len(y) * 1000, 1)})
+    return {"review_minutes": REVIEW_MINUTES, "error_minutes": ERROR_MINUTES, "documents": len(y),
+            "everything_by_hand_minutes_per_1000": REVIEW_MINUTES * 1000,
+            "no_review_minutes_per_1000": round(ERROR_MINUTES * float(wrong.sum()) / len(y) * 1000, 1),
+            "by_threshold": rows}
+
+
+def train_and_evaluate(docs, final_test):
+    """Steps 3 to 7 for one labelled pool: split by case, tune on validation, test once, check leakage."""
+    parts = split_by_group(docs, "case_id", fractions=(0.8, 0.2, 0.0))  # no case in two sets
+    assert not parts["test"], "a pool holds training and validation cases only"
+    sizes = {"train": len(parts["train"]), "val": len(parts["val"]), "final_test": len(final_test)}
+    shared = {r["case_id"] for r in docs} & {r["case_id"] for r in final_test}
     best, curve = select_hyperparameters(parts["train"], parts["val"])
     cw = None if best["class_weight"] == "none" else best["class_weight"]
     model = build_pipeline(best["C"], cw).fit(*xy(parts["train"]))  # learns on TRAIN only
-    x_test, y_test = xy(parts["test"])
+    x_test, y_test = xy(final_test)
     pred = model.predict(x_test)                                    # the test set, used once
     test = {"accuracy": round(accuracy_score(y_test, pred), 4),
             "macro_f1": round(f1_score(y_test, pred, average="macro"), 4),
+            "macro_f1_interval_95": macro_f1_interval(y_test, pred, [r["case_id"] for r in final_test]),
             "per_class_f1": {k: round(v["f1-score"], 4) for k, v in
                              classification_report(y_test, pred, output_dict=True).items() if k in DOC_TYPES},
             "confusion_matrix": confusion_matrix(y_test, pred, labels=DOC_TYPES).tolist(),
@@ -128,51 +212,85 @@ def train_and_evaluate(docs):
     test["passes_acceptance"] = test["macro_f1"] >= ACCEPTANCE_MACRO_F1
     leak = leakage_experiment(docs, best)
     return {"model": model, "parts": parts, "sizes": sizes, "shared_cases": len(shared), "best": best,
-            "curve": curve, "test": test, "leakage": leak,
+            "curve": curve, "test": test, "leakage": leak, "baselines": baselines(parts["train"], final_test),
+            "review_cost": review_cost(model, x_test, y_test),
             "learned": {"vocabulary_terms": len(model.named_steps["tfidf"].vocabulary_),
                         "logistic_coefficients": int(model.named_steps["clf"].coef_.size
                                                      + model.named_steps["clf"].intercept_.size)}}
 
 
+def log_to_mlflow(n_cases, r, docs, final_test):
+    """Record one scenario as an MLflow run and register its model as a new version."""
+    with mlflow.start_run(run_name=f"pool-{n_cases}-cases") as run:
+        mlflow.log_params({"labelled_cases": n_cases, "documents_train": r["sizes"]["train"],
+                           "documents_val": r["sizes"]["val"], "split": "by case, 80/20, seed 11",
+                           "final_test_cases": FINAL_TEST_CASES, "C": r["best"]["C"],
+                           "class_weight": r["best"]["class_weight"], "ngram_range": "1-2", "min_df": 2,
+                           "review_threshold": REVIEW_THRESHOLD, "acceptance_macro_f1": ACCEPTANCE_MACRO_F1})
+        mlflow.set_tags({"data_version": sha256_json(docs)[:16], "final_test_version": sha256_json(final_test)[:16],
+                         "gate": "passed" if r["test"]["passes_acceptance"] else "failed"})
+        rows = [c for c in r["curve"] if c["class_weight"] == r["best"]["class_weight"]]
+        for step, point in enumerate(rows):                          # the validation curve, one step per C
+            mlflow.log_metric("train_macro_f1_by_C", point["train_macro_f1"], step=step)
+            mlflow.log_metric("val_macro_f1_by_C", point["val_macro_f1"], step=step)
+        mlflow.log_metrics({"val_macro_f1": r["best"]["val_macro_f1"], "test_macro_f1": r["test"]["macro_f1"],
+                            "test_accuracy": r["test"]["accuracy"],
+                            "share_sent_to_review": r["test"]["share_sent_to_review"],
+                            "accuracy_on_kept": r["test"]["accuracy_on_kept"],
+                            "baseline_most_frequent_macro_f1": r["baselines"]["most_frequent_type"],
+                            "baseline_keyword_rule_macro_f1": r["baselines"]["keyword_rule"],
+                            "leak_split_by_case_macro_f1": r["leakage"]["split_by_case"],
+                            "leak_random_split_macro_f1": r["leakage"]["random_split"]})
+        mlflow.log_dict({"labels": DOC_TYPES, "confusion_matrix": r["test"]["confusion_matrix"]},
+                        "confusion_matrix.json")
+        info = mlflow.sklearn.log_model(sk_model=r["model"], name="model", registered_model_name=MODEL_NAME,
+                                        pip_requirements=pinned("scikit-learn", "numpy", "scipy", "joblib"),
+                                        await_registration_for=0)
+    return run.info.run_id, str(info.registered_model_version)
+
+
 def main():
     print("1. Need: propose a document type. Acceptance: macro-F1 >=", ACCEPTANCE_MACRO_F1,
           "on the final test set, and low-confidence documents go to a person.")
+    client = use_experiment(EXPERIMENT)
+    final_test = make_final_test_set()
+    print("2. Fixed final test set:", len(final_test), "documents in", FINAL_TEST_CASES,
+          "cases, never used for training or tuning.")
     runs = {}
-    for n_cases in (200, 400):
+    for n_cases in POOLS:
         docs = make_case_documents(n_cases=n_cases)
-        if n_cases == 200:
-            print("2. Data:", len(docs), "fictional documents in", n_cases, "cases. Example:", json.dumps(docs[0]))
+        if n_cases == POOLS[0]:
+            print("   Example document:", json.dumps(docs[0]))
             print("   Class mix:", dict(Counter(d["label"] for d in docs)))
-        r = train_and_evaluate(docs)
+        r = train_and_evaluate(docs, final_test)
+        r["run_id"], r["registered_version"] = log_to_mlflow(n_cases, r, docs, final_test)
+        client.set_model_version_tag(MODEL_NAME, r["registered_version"], "labelled_cases", str(n_cases))
+        client.set_model_version_tag(MODEL_NAME, r["registered_version"], "gate",
+                                     "passed" if r["test"]["passes_acceptance"] else "failed")
         r["docs"] = docs
         runs[n_cases] = r
-        print(f"--- {n_cases} labelled cases ({len(docs)} documents)")
-        print("3. Split by case:", r["sizes"], "- cases shared between train and test:", r["shared_cases"])
+        print(f"--- pool of {n_cases} labelled cases ({len(docs)} documents)")
+        print("3. Split by case:", r["sizes"], "- cases shared with the final test set:", r["shared_cases"])
         print("4-5. Hyperparameters chosen on validation:", r["best"])
         print("   Learned parameters:", r["learned"])
-        print("6. Final test, used once:", {k: v for k, v in r["test"].items() if k != "confusion_matrix"})
-        print("7. Leakage check, test macro-F1:", r["leakage"])
-        print("   Release decision:", "candidate for release" if r["test"]["passes_acceptance"] else
-              "refused: below the acceptance criterion, more labelled cases needed")
+        print("6. Final test, used once:", {k: v for k, v in r["test"].items()
+                                           if k not in ("confusion_matrix", "labels", "per_class_f1")})
+        print("   Baselines on the same test set (macro-F1):", r["baselines"])
+        print("7. Leakage check inside the pool, test macro-F1:", r["leakage"])
+        print("8. MLflow run", r["run_id"][:8], "registered as version", r["registered_version"], "of", MODEL_NAME,
+              "- gate", "passed" if r["test"]["passes_acceptance"] else "failed")
 
-    final = runs[400]
-    model, test, best, docs = final["model"], final["test"], final["best"], final["docs"]
-    ARTIFACTS.mkdir(exist_ok=True)
-    joblib.dump(model, ARTIFACT)                      # the whole fitted pipeline
-    manifest = write_manifest(
-        MANIFEST, model_name="document-triage", artifact=ARTIFACT.name, artifact_sha256=sha256_file(ARTIFACT),
-        data_version=sha256_json(docs)[:16], labelled_cases=400, split="by case, 70/15/15, seed 11",
-        hyperparameters={"C": best["C"], "class_weight": best["class_weight"], "ngram_range": [1, 2],
-                         "min_df": 2}, metrics={"val_macro_f1": round(best["val_macro_f1"], 4), **test},
-        review_threshold=REVIEW_THRESHOLD, acceptance_macro_f1=ACCEPTANCE_MACRO_F1,
-        owner="document intake service owner (fictional)", release_decision="pending human review")
-    print("8. Artifact:", ARTIFACT.name, manifest["artifact_sha256"][:16], "... manifest written.")
+    final = runs[POOLS[-1]]
+    test = final["test"]
+    print("   Review cost with the largest pool (minutes per 1.000 documents):",
+          {row["threshold"]: row["minutes_per_1000"] for row in final["review_cost"]["by_threshold"]},
+          "- everything by hand:", final["review_cost"]["everything_by_hand_minutes_per_1000"])
 
-    loaded = joblib.load(ARTIFACT)                    # what the service loads at start-up
+    loaded = mlflow.sklearn.load_model(f"models:/{MODEL_NAME}/{final['registered_version']}")
     sample = predict_with_review(loaded, ["witness saw a person near the harbour in the evening"])
-    print("9. Inference from the saved artifact:", sample)
+    print("9. Inference from the registered version:", sample)
 
-    x_test = xy(final["parts"]["test"])[0]
+    x_test = xy(final_test)[0]
     drift = drifted_batch()
     on_test = predict_with_review(loaded, x_test)
     on_new = predict_with_review(loaded, [d["text"] for d in drift])
@@ -184,52 +302,89 @@ def main():
     mon["investigate"] = mon["review_share_new_batch"] - mon["review_share_test"] > 0.10
     print("10. Monitoring after deployment:", mon)
 
-    summary = {str(n): {k: r[k] for k in ("sizes", "best", "curve", "test", "leakage", "learned")}
+    summary = {str(n): {k: r[k] for k in ("sizes", "best", "curve", "test", "leakage", "learned", "baselines",
+                                          "review_cost", "run_id", "registered_version")}
                for n, r in runs.items()}
-    save_json("01_machine_learning.json", {"runs": summary, "monitoring": mon,
-                                            "artifact_sha256": manifest["artifact_sha256"]})
-    plot(final["curve"], test, runs)
+    save_json("01_machine_learning.json", {
+        "model_name": MODEL_NAME, "acceptance_macro_f1": ACCEPTANCE_MACRO_F1, "review_threshold": REVIEW_THRESHOLD,
+        "final_test": {"cases": FINAL_TEST_CASES, "documents": len(final_test),
+                       "version": sha256_json(final_test)[:16]},
+        "runs": summary, "monitoring": mon, "environment": run_environment(),
+        "command": "python examples/01_machine_learning.py"})
+    plot(runs)
     return test
 
 
-def plot(curve, test, runs):
+def plot(runs):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    rows = [r for r in curve if r["class_weight"] == runs[400]["best"]["class_weight"]]
-    fig, ax = plt.subplots(1, 3, figsize=(15, 4.2))
+    last = runs[POOLS[-1]]
+    fig, ax = plt.subplots(2, 3, figsize=(16, 8.6))
+    ax = ax.ravel()
+    rows = [r for r in last["curve"] if r["class_weight"] == last["best"]["class_weight"]]
     ax[0].semilogx([r["C"] for r in rows], [r["train_macro_f1"] for r in rows], "o-", label="training set")
     ax[0].semilogx([r["C"] for r in rows], [r["val_macro_f1"] for r in rows], "s-", label="validation set")
     ax[0].set_xlabel("C (inverse regularisation strength)")
     ax[0].set_ylabel("macro-F1")
-    ax[0].set_title("Choose C on validation data (400 cases)")
+    ax[0].set_title(f"Choose C on validation data ({POOLS[-1]} cases)")
     ax[0].legend()
-    honest = [runs[n]["leakage"]["split_by_case"] for n in (200, 400)]
-    leaky = [runs[n]["leakage"]["random_split"] for n in (200, 400)]
-    xs = np.arange(2)
-    ax[1].bar(xs - 0.18, honest, 0.36, label="split by case (honest)")
-    ax[1].bar(xs + 0.18, leaky, 0.36, label="random split (leaky)")
+    scores = [runs[n]["test"]["macro_f1"] for n in POOLS]
+    low = [s - runs[n]["test"]["macro_f1_interval_95"][0] for s, n in zip(scores, POOLS)]
+    high = [runs[n]["test"]["macro_f1_interval_95"][1] - s for s, n in zip(scores, POOLS)]
+    ax[1].errorbar(range(len(POOLS)), scores, yerr=[low, high], fmt="o-", capsize=5, label="model, 95 % interval")
     ax[1].axhline(ACCEPTANCE_MACRO_F1, color="crimson", linestyle="--", label="acceptance 0.85")
-    for x, v in zip(xs - 0.18, honest):
-        ax[1].text(x, v + 0.005, f"{v:.3f}", ha="center", fontsize=8)
-    for x, v in zip(xs + 0.18, leaky):
-        ax[1].text(x, v + 0.005, f"{v:.3f}", ha="center", fontsize=8)
-    ax[1].set_xticks(xs, ["200 cases", "400 cases"])
-    ax[1].set_ylim(0.7, 1.0)
-    ax[1].set_ylabel("test macro-F1")
-    ax[1].set_title("Leakage inflates the score")
-    ax[1].legend(fontsize=8, loc="upper left")
-    cm = np.array(test["confusion_matrix"])
-    ax[2].imshow(cm, cmap="Blues")
+    ax[1].axhline(last["baselines"]["keyword_rule"], color="#e66a00", linestyle=":", label="keyword rule")
+    ax[1].axhline(last["baselines"]["most_frequent_type"], color="grey", linestyle=":", label="most frequent type")
+    for i, v in enumerate(scores):
+        ax[1].text(i + 0.08, v, f"{v:.3f}", fontsize=8, va="center")
+    ax[1].set_xticks(range(len(POOLS)), [f"{n} cases" for n in POOLS])
+    ax[1].set_ylim(0, 1.0)
+    ax[1].set_ylabel("macro-F1 on the fixed final test set")
+    ax[1].set_title("More labelled cases, same final test set")
+    ax[1].legend(fontsize=8, loc="lower right")
+    leak_pools = [n for n in POOLS if n != POOLS[0]]
+    honest = [runs[n]["leakage"]["split_by_case"] for n in leak_pools]
+    leaky = [runs[n]["leakage"]["random_split"] for n in leak_pools]
+    xs = np.arange(len(leak_pools))
+    ax[2].bar(xs - 0.18, honest, 0.36, label="split by case (honest)")
+    ax[2].bar(xs + 0.18, leaky, 0.36, label="random split (leaky)")
+    for x, v in list(zip(xs - 0.18, honest)) + list(zip(xs + 0.18, leaky)):
+        ax[2].text(x, v + 0.005, f"{v:.3f}", ha="center", fontsize=8)
+    ax[2].set_xticks(xs, [f"{n} cases" for n in leak_pools])
+    ax[2].set_ylim(0.7, 1.0)
+    ax[2].set_ylabel("test macro-F1 inside the pool")
+    ax[2].set_title("Leakage inflates the score")
+    ax[2].legend(fontsize=8, loc="upper left")
+    cm = np.array(last["test"]["confusion_matrix"])
+    ax[3].imshow(cm, cmap="Blues")
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
-            ax[2].text(j, i, cm[i, j], ha="center", va="center")
+            ax[3].text(j, i, cm[i, j], ha="center", va="center")
     short = [t.replace("_", " ") for t in DOC_TYPES]
-    ax[2].set_xticks(range(len(short)), short, fontsize=7, rotation=20)
-    ax[2].set_yticks(range(len(short)), short, fontsize=7)
-    ax[2].set_xlabel("predicted")
-    ax[2].set_ylabel("true")
-    ax[2].set_title("Final test confusion matrix (400 cases)")
+    ax[3].set_xticks(range(len(short)), short, fontsize=7, rotation=20)
+    ax[3].set_yticks(range(len(short)), short, fontsize=7)
+    ax[3].set_xlabel("predicted")
+    ax[3].set_ylabel("true")
+    ax[3].set_title(f"Final test confusion matrix ({POOLS[-1]} cases)")
+    cost = last["review_cost"]
+    ts = [r["threshold"] for r in cost["by_threshold"]]
+    ax[4].plot(ts, [r["minutes_per_1000"] for r in cost["by_threshold"]], "o-", label="model + review")
+    ax[4].axhline(cost["everything_by_hand_minutes_per_1000"], color="grey", linestyle="--", label="everything by hand")
+    ax[4].set_xlabel("review threshold (confidence)")
+    ax[4].set_ylabel("minutes per 1.000 documents")
+    ax[4].set_title("Cost of review and of unchecked errors")
+    ax[4].legend(fontsize=8)
+    ax[5].plot(ts, [r["share_sent_to_review"] for r in cost["by_threshold"]], "o-", label="share sent to review")
+    ax5 = ax[5].twinx()
+    ax5.plot(ts, [r["errors_not_reviewed"] for r in cost["by_threshold"]], "s--", color="#d73285",
+             label="errors nobody checked")
+    ax[5].set_xlabel("review threshold (confidence)")
+    ax[5].set_ylabel("share sent to review")
+    ax5.set_ylabel(f"errors among {cost['documents']} test documents")
+    ax[5].set_title("Review share versus unchecked errors")
+    ax[5].legend(fontsize=8, loc="center left")
+    ax5.legend(fontsize=8, loc="center right")
     fig.tight_layout()
     RESULTS.mkdir(exist_ok=True)
     fig.savefig(RESULTS / "01_machine_learning.png", dpi=130)

@@ -5,7 +5,7 @@ Author: Yves Schillings.
 Run:  python examples/02_deep_learning.py          (about one minute on a laptop CPU)
 
 Need: propose the type of a scanned page from its image, before any text is read.
-Data: fictional 32 x 32 page images (training/page_images.py), three types.
+Data: fictional 32 x 32 page images (page_images.py), three types.
 
 Part 1 trains two networks with separate training, validation and test sets:
   * an MLP, which sees the pixels as one flat list,
@@ -14,24 +14,39 @@ Each epoch logs the training loss, the validation loss and accuracy, and how far
 the first-layer weights moved. Early stopping keeps the epoch with the lowest
 validation loss. The test sets are used once, at the end.
 
-Part 2 adapts a network pretrained on generic page pieces, with only 8 labelled
-pages per type: feature extraction (frozen convolutions) versus full fine-tuning
-versus training from scratch.
+Part 2 adapts a network pretrained on generic page pieces, with only 8 training
++ 8 validation pages per type: training from scratch (every weight learns),
+feature extraction (frozen convolutions, only the dense layer and the head learn)
+and full fine-tuning (every weight learns, from the pretrained values). For each
+seed the three modes start from the same initial head weights, and the two
+adapted modes from the same pretrained layers. Five seeds also vary which pages
+are labelled, and the results report the mean and the spread.
+
+Reproducibility: the run fixes the number of CPU threads (results can differ with
+another thread count), requests deterministic algorithms and records the versions.
+
+MLflow records each training run: parameters, per-epoch curves, test scores and,
+for the CNN, the saved model as a new version of "page-layout-cnn".
 """
 import copy
 import time
 
+import mlflow
+import mlflow.pytorch
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from fictional_data import ARTIFACTS, RESULTS, save_json, sha256_file, write_manifest
-from page_images import GENERIC_PIECES, PAGE_TYPES, SIZE, draw_generic, draw_page, make_set
+from fictional_data import RESULTS, run_environment, save_json
+from mlflow_tracking import pinned, use_experiment
+from page_images import GENERIC_PIECES, SIZE, draw_generic, draw_page, make_set
 
-ARTIFACT = ARTIFACTS / "page_layout_cnn.pt"
-MANIFEST = ARTIFACTS / "page_layout_cnn.manifest.json"
 REVIEW_THRESHOLD = 0.9
+N_THREADS = 4                    # fixed and recorded: another thread count can change the results
+SEEDS = (0, 1, 2, 3, 4)          # adaptation runs, to measure the spread
+MODEL_NAME = "page-layout-cnn"
+EXPERIMENT = "page-layout"
 
 
 class MLP(nn.Module):
@@ -153,59 +168,115 @@ def part1_train_from_scratch():
 
 
 def part2_adapt_pretrained():
-    """Few labels: reuse what a network learned on generic page pieces."""
+    """Few labels: reuse what a network learned on generic page pieces. 8 training + 8 validation pages per type."""
     pre_train = tensors(*make_set(draw_generic, len(GENERIC_PIECES), 400, seed=10, hard=False))
     pre_val = tensors(*make_set(draw_generic, len(GENERIC_PIECES), 60, seed=11))
     torch.manual_seed(0)
     base = SmallCNN(n_out=len(GENERIC_PIECES))
     fit(base, pre_train, pre_val, epochs=8)
-    few = tensors(*make_set(draw_page, 3, 8, seed=12))
-    few_val = tensors(*make_set(draw_page, 3, 8, seed=13))
+    pretrained = {k: v for k, v in base.state_dict().items() if not k.startswith("head")}
     test_clean = tensors(*make_set(draw_page, 3, 200, seed=3))
-    out = {"labelled_pages_per_type": 8, "pretraining_images": len(pre_train[1])}
-
-    def from_base():
-        m = SmallCNN(3)
-        m.load_state_dict({k: v for k, v in base.state_dict().items() if not k.startswith("head")}, strict=False)
-        return m
-
-    torch.manual_seed(0)
-    scratch = SmallCNN(3)
-    fit(scratch, few, few_val, epochs=60, patience=10)
-    extract = from_base()
-    for name, p in extract.named_parameters():       # feature extraction: convolutions stay frozen
-        p.requires_grad = name.startswith("head") or name.startswith("fc")
-    frozen_before = extract.c1.weight.detach().clone()
-    fit(extract, few, few_val, epochs=60, lr=3e-3, patience=10)
-    assert torch.equal(frozen_before, extract.c1.weight), "frozen weights must not change"
-    tuned = from_base()                               # full fine-tuning: every weight may change
-    fit(tuned, few, few_val, epochs=60, lr=5e-4, patience=10)
-    for name, m in (("from_scratch", scratch), ("feature_extraction", extract), ("full_fine_tuning", tuned)):
-        out[name] = {"trainable_parameters": n_params(m, trainable=True),
-                     "test_clean_accuracy": test_scores(m, *test_clean)["accuracy"]}
-    print("Few labels, clean test accuracy:", {k: v["test_clean_accuracy"] for k, v in out.items()
-                                               if isinstance(v, dict)})
+    modes = ("from_scratch", "feature_extraction", "full_fine_tuning")
+    per_seed, trainable = [], {}
+    for seed in SEEDS:
+        few = tensors(*make_set(draw_page, 3, 8, seed=100 + seed))
+        few_val = tensors(*make_set(draw_page, 3, 8, seed=200 + seed))
+        torch.manual_seed(seed)
+        start = SmallCNN(3)                           # one random start, shared by the three modes
+        scratch = copy.deepcopy(start)
+        extract = copy.deepcopy(start)
+        extract.load_state_dict(pretrained, strict=False)
+        tuned = copy.deepcopy(extract)                # same pretrained layers, same head start
+        fit(scratch, few, few_val, epochs=60, patience=10, seed=seed)
+        for name, p in extract.named_parameters():   # feature extraction: convolutions stay frozen
+            p.requires_grad = name.startswith("head") or name.startswith("fc")
+        frozen_before = extract.c1.weight.detach().clone()
+        fit(extract, few, few_val, epochs=60, lr=3e-3, patience=10, seed=seed)
+        assert torch.equal(frozen_before, extract.c1.weight), "frozen weights must not change"
+        fit(tuned, few, few_val, epochs=60, lr=5e-4, patience=10, seed=seed)  # every weight may change
+        row = {"seed": seed}
+        for name, m in zip(modes, (scratch, extract, tuned)):
+            row[name] = test_scores(m, *test_clean)["accuracy"]
+            trainable[name] = (n_params(m, trainable=True),
+                               sorted({k.split(".")[0] for k, p in m.named_parameters() if p.requires_grad}))
+        row["best"] = max(modes, key=lambda k: row[k])
+        per_seed.append(row)
+    out = {"labelled_pages_per_type": {"training": 8, "validation": 8}, "pretraining_images": len(pre_train[1]),
+           "test_pages": len(test_clean[1]), "seeds": list(SEEDS), "per_seed": per_seed}
+    for name in modes:
+        acc = np.array([r[name] for r in per_seed])
+        out[name] = {"trainable_parameters": trainable[name][0], "layers_that_learn": trainable[name][1],
+                     "test_clean_accuracy_mean": round(float(acc.mean()), 4),
+                     "test_clean_accuracy_std": round(float(acc.std(ddof=1)), 4),
+                     "test_clean_accuracy_min": round(float(acc.min()), 4),
+                     "test_clean_accuracy_max": round(float(acc.max()), 4)}
+    out["best_mode_count"] = {name: sum(r["best"] == name for r in per_seed) for name in modes}
+    print("Few labels, clean test accuracy over", len(SEEDS), "seeds:",
+          {k: f"{out[k]['test_clean_accuracy_mean']:.3f} +/- {out[k]['test_clean_accuracy_std']:.3f}" for k in modes},
+          "- best mode per seed:", out["best_mode_count"])
     return out
 
 
+def log_part1(part1, cnn):
+    """One MLflow run per network, with its curves. The CNN is registered as a new model version."""
+    version = None
+    for name in ("mlp", "cnn"):
+        r = part1[name]
+        with mlflow.start_run(run_name=name):
+            mlflow.log_params({"network": name.upper(), "weights": r["parameters"], "max_epochs": 30, "lr": 2e-3,
+                               "batch": 32, "patience": 5, "seed": 0, "threads": N_THREADS,
+                               "train_pages": part1["sizes"]["train"], "validation_pages": part1["sizes"]["validation"]})
+            for h in r["history"]:                    # the curves, one step per epoch
+                mlflow.log_metrics({"train_loss": h["train_loss"], "val_loss": h["val_loss"],
+                                    "val_accuracy": h["val_accuracy"], "first_layer_change": h["first_layer_change"]},
+                                   step=h["epoch"])
+            mlflow.log_metrics({"test_clean_accuracy": r["test_clean"]["accuracy"],
+                                "test_hard_accuracy": r["test_hard"]["accuracy"], "best_epoch": r["best_epoch"],
+                                "epochs_run": r["epochs_run"]})
+            if name == "cnn":
+                # Saved as a traced graph (pt2): loading it needs neither this file nor its classes.
+                # An example batch of 2 pages keeps the batch size free in the saved graph.
+                example = tensors(*make_set(draw_page, 3, 1, seed=6))[0][:2].numpy()
+                info = mlflow.pytorch.log_model(cnn.eval(), name="model", registered_model_name=MODEL_NAME,
+                                                input_example=example, serialization_format="pt2",
+                                                pip_requirements=pinned("torch", "numpy"), await_registration_for=0)
+                version = str(info.registered_model_version)
+    return version
+
+
+def log_part2(part2):
+    with mlflow.start_run(run_name="adaptation-8-labels"):
+        mlflow.log_params({"labelled_pages_per_type": "8 training + 8 validation", "seeds": len(SEEDS),
+                           "threads": N_THREADS, "pretraining_images": part2["pretraining_images"]})
+        for r in part2["per_seed"]:                   # one step per seed, to see the spread
+            mlflow.log_metrics({k: r[k] for k in ("from_scratch", "feature_extraction", "full_fine_tuning")},
+                               step=r["seed"])
+        for k in ("from_scratch", "feature_extraction", "full_fine_tuning"):
+            mlflow.log_metrics({f"{k}_mean": part2[k]["test_clean_accuracy_mean"],
+                                f"{k}_std": part2[k]["test_clean_accuracy_std"]})
+
+
 def main():
+    torch.set_num_threads(N_THREADS)
+    torch.use_deterministic_algorithms(True, warn_only=True)
     t0 = time.time()
+    use_experiment(EXPERIMENT)
     part1, cnn = part1_train_from_scratch()
+    version = log_part1(part1, cnn)
+    reloaded = mlflow.pytorch.load_model(f"models:/{MODEL_NAME}/{version}")
+    x = tensors(*make_set(draw_page, 3, 20, seed=5))[0]
+    with torch.no_grad():
+        same = bool(torch.equal(cnn.eval()(x).argmax(1), reloaded(x).argmax(1)))
+    print(f"CNN registered as version {version} of {MODEL_NAME}. Reloaded from the registry, same predictions: {same}")
     part2 = part2_adapt_pretrained()
-    ARTIFACTS.mkdir(exist_ok=True)
-    torch.save(cnn.state_dict(), ARTIFACT)
-    write_manifest(MANIFEST, model_name="page-layout-cnn", artifact=ARTIFACT.name,
-                   artifact_sha256=sha256_file(ARTIFACT), architecture="SmallCNN, 3 convolution layers",
-                   input="1 x 32 x 32 grey image, ink = 1", classes=PAGE_TYPES,
-                   metrics={"test_clean": part1["cnn"]["test_clean"]["accuracy"],
-                            "test_hard": part1["cnn"]["test_hard"]["accuracy"]},
-                   review_threshold=REVIEW_THRESHOLD, owner="document intake service owner (fictional)",
-                   release_decision="pending human review")
-    result = {"device": "cpu", "torch": torch.__version__, "seconds": round(time.time() - t0, 1),
-              "part1": part1, "part2": part2}
+    log_part2(part2)
+    result = {"device": "cpu", "threads": N_THREADS, "deterministic_algorithms": True,
+              "seconds": round(time.time() - t0, 1), "registered_version": version,
+              "reloaded_model_same_predictions": same, "environment": run_environment(N_THREADS),
+              "command": "python examples/02_deep_learning.py", "part1": part1, "part2": part2}
     save_json("02_deep_learning.json", result)
     plot(part1, part2)
-    print(f"Done in {result['seconds']} s. Artifact {ARTIFACT.name} and manifest written.")
+    print(f"Done in {result['seconds']} s with {N_THREADS} CPU threads.")
     return result
 
 
@@ -232,17 +303,18 @@ def plot(part1, part2):
     ax[1].legend(fontsize=8)
     names = ["MLP\nclean", "MLP\nhard", "CNN\nclean", "CNN\nhard", "8 labels\nscratch", "8 labels\nfrozen",
              "8 labels\nfine-tuned"]
+    modes = ("from_scratch", "feature_extraction", "full_fine_tuning")
     vals = [part1["mlp"]["test_clean"]["accuracy"], part1["mlp"]["test_hard"]["accuracy"],
-            part1["cnn"]["test_clean"]["accuracy"], part1["cnn"]["test_hard"]["accuracy"],
-            part2["from_scratch"]["test_clean_accuracy"], part2["feature_extraction"]["test_clean_accuracy"],
-            part2["full_fine_tuning"]["test_clean_accuracy"]]
-    ax[2].bar(range(len(vals)), vals, color=["#9aa5b1", "#9aa5b1", "#0072c7", "#0072c7", "#d73285", "#008e48",
-                                             "#e66a00"])
+            part1["cnn"]["test_clean"]["accuracy"], part1["cnn"]["test_hard"]["accuracy"]] + \
+           [part2[m]["test_clean_accuracy_mean"] for m in modes]
+    errs = [0, 0, 0, 0] + [part2[m]["test_clean_accuracy_std"] for m in modes]
+    ax[2].bar(range(len(vals)), vals, yerr=errs, capsize=4,
+              color=["#9aa5b1", "#9aa5b1", "#0072c7", "#0072c7", "#d73285", "#008e48", "#e66a00"])
     for i, v in enumerate(vals):
-        ax[2].text(i, v + 0.01, f"{v:.2f}", ha="center", fontsize=8)
+        ax[2].text(i, v + errs[i] + 0.01, f"{v:.2f}", ha="center", fontsize=8)
     ax[2].set_xticks(range(len(vals)), names, fontsize=7)
-    ax[2].set_ylim(0, 1.1)
-    ax[2].set_title("Test accuracy, used once")
+    ax[2].set_ylim(0, 1.15)
+    ax[2].set_title(f"Test accuracy, used once (8 labels: mean and spread of {len(SEEDS)} seeds)")
     fig.tight_layout()
     RESULTS.mkdir(exist_ok=True)
     fig.savefig(RESULTS / "02_deep_learning.png", dpi=130)

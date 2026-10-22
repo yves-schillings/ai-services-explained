@@ -1,4 +1,4 @@
-"""Shared helpers for the training examples: fictional data, splits and model manifests.
+"""Shared helpers for the training examples: fictional data, splits and run evidence.
 
 Author: Yves Schillings.
 
@@ -8,15 +8,16 @@ reproduces the same data and the same results.
 """
 import hashlib
 import json
+import os
 import platform
 import random
 import subprocess
 from datetime import datetime, timezone
+from importlib import metadata
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
-ARTIFACTS = ROOT / "artifacts"
 
 # ---------------------------------------------------------------------------
 # Fictional case documents for text classification and clustering
@@ -46,7 +47,7 @@ CASE_WORDS = ["harbour", "bluevan", "mill", "orchard", "tunnel", "kiosk", "bridg
 TYPE_WEIGHTS = [0.34, 0.33, 0.23, 0.10]
 
 
-def make_case_documents(n_cases=200, seed=7):
+def make_case_documents(n_cases=200, seed=7, prefix="case"):
     """Return a list of dicts: {doc_id, case_id, text, label}.
 
     Each case comes mostly from one source, so most of its documents share a type
@@ -56,7 +57,7 @@ def make_case_documents(n_cases=200, seed=7):
     rng = random.Random(seed)
     docs = []
     for c in range(n_cases):
-        case_id = f"case-{c:03d}"
+        case_id = f"{prefix}-{c:03d}"
         dominant = rng.choices(DOC_TYPES, weights=TYPE_WEIGHTS)[0]
         case_terms = rng.sample(CASE_WORDS, 2)
         for d in range(rng.randint(4, 9)):
@@ -72,6 +73,16 @@ def make_case_documents(n_cases=200, seed=7):
             docs.append({"doc_id": f"{case_id}-d{d}", "case_id": case_id, "text": " ".join(words),
                          "label": label})
     return docs
+
+
+# The final test set: generated once with its own seed and its own case names. It is never
+# part of a training pool, so every scenario is judged on exactly the same documents.
+FINAL_TEST_CASES = 100
+FINAL_TEST_SEED = 23
+
+
+def make_final_test_set():
+    return make_case_documents(n_cases=FINAL_TEST_CASES, seed=FINAL_TEST_SEED, prefix="test-case")
 
 
 def split_by_group(rows, key, fractions=(0.7, 0.15, 0.15), seed=11):
@@ -117,19 +128,42 @@ def sha256_json(obj):
 
 
 def code_revision():
+    """The commit that produced a result, marked when the examples differ from that commit."""
     try:
-        return subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT,
-                                       stderr=subprocess.DEVNULL, text=True).strip()
+        rev = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT,
+                                      stderr=subprocess.DEVNULL, text=True).strip()
+        changed = subprocess.check_output(["git", "status", "--porcelain", "--", "examples"], cwd=ROOT,
+                                          stderr=subprocess.DEVNULL, text=True).strip()
+        return rev + ("+local-changes" if changed else "")
     except Exception:
         return "not-a-git-checkout"
 
 
-def write_manifest(path, **fields):
-    """Write the evidence that a release owner needs next to the model artifact."""
-    manifest = {"created_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "code_revision": code_revision(), "python": platform.python_version(), **fields}
-    Path(path).write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    return manifest
+def sha256_dir(path):
+    """One digest for a whole model directory: every file name and every file content."""
+    h = hashlib.sha256()
+    root = Path(path)
+    for f in sorted(p for p in root.rglob("*") if p.is_file()):
+        h.update(f.relative_to(root).as_posix().encode("utf-8"))
+        h.update(sha256_file(f).encode("ascii"))
+    return h.hexdigest()
+
+
+def utc_now():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def run_environment(threads=None):
+    """What a reader needs to reproduce a run: versions, threads and the code revision."""
+    versions = {}
+    for package in ("numpy", "scikit-learn", "torch", "mlflow"):
+        try:
+            versions[package] = metadata.version(package)
+        except metadata.PackageNotFoundError:
+            versions[package] = None
+    return {"python": platform.python_version(), "platform": platform.platform(terse=True),
+            "cpu_count": os.cpu_count(), "threads": threads, "packages": versions,
+            "code_revision": code_revision()}
 
 
 def save_json(name, obj):
