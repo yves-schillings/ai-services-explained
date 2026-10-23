@@ -207,3 +207,12 @@ def test_lora_example_tests_on_new_wording_and_unseen_pairs():
     row = {"system": "Heron", "state": "bricked"}
     assert lora.correct("The payroll server does not start.", row)
     assert not lora.correct("Heron is bricked again.", row)
+
+
+def test_lora_by_hand_only_b_moves_first_and_reaches_the_goal():
+    by_hand = load("21")
+    result = by_hand.train()
+    start, first = result["history"][0], result["history"][1]
+    assert first["A"] == start["A"] and any(first["B"])          # B starts at 0, so only B moves at step 1
+    final = result["final_result"]
+    assert final["Heron"][1] > 0.85 and final["printer"] == [round(v, 2) for v in (by_hand.W @ by_hand.WORDS["printer"]).tolist()]
